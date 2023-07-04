@@ -1,0 +1,14 @@
+[
+    {
+        "order_id": 1,
+        "customer": "chunnu@mail",
+        "total_price": 220,
+        "status": "Received"
+    },
+    {
+        "order_id": 2,
+        "customer": "chunnu@mail",
+        "total_price": 120,
+        "status": "Received"
+    }
+]

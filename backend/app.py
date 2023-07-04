@@ -87,11 +87,17 @@ def initialize_food_items():
 
 initialize_food_items()
 
+# find dish by id
+def find_dish_by_id(id):
+    for item in food_items:
+        if (item["id"]==id):
+            return item
+
 
 # generating jwt
-def generate_jwt_token(user_id, email):
+def generate_jwt_token(role, email):
     payload = {
-        'id': user_id,
+        'role': role,
         'email': email
     }
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
@@ -163,8 +169,8 @@ def login():
     existing_data = read_user_data()
     for user in existing_data:
         if user['email'] == email and user['password'] == password:
-            user_id = user['id']
-            token = generate_jwt_token(user_id, email)
+            role = user['role']
+            token = generate_jwt_token(role, email)
             return jsonify({'token': token}), 200
 
     return jsonify({'message': 'Invalid credentials'}), 401
@@ -179,6 +185,7 @@ def get_menu():
 
 # multiple order taking facility
 @app.route('/place-order', methods=['POST'])
+@authenticate_and_authorize("Admin" or "User")
 def place_order():
     # Get data from the request body
     user_email = g.user_email
@@ -226,6 +233,8 @@ def place_order():
         "status": "Received"
     }
     orders.append(order)
+    save_orders()
+    save_data(food_items)
     return jsonify({'message': 'Order placed successfully', 'total_price': total_price}), 200
 
 
@@ -259,7 +268,7 @@ def create_dish():
 @app.route('/dish/<int:dish_id>', methods=['PATCH'])
 @authenticate_and_authorize("Admin")
 def update_dish(dish_id):
-    initialize_food_items()()
+    initialize_food_items()
     dish = find_dish_by_id(dish_id)
 
     if not dish:
