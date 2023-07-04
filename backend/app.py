@@ -14,8 +14,12 @@ secretKey = os.getenv("secretKey")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secretKey
 
+# global variables to store user and food data
 existing_data = []
+food_items = []
+data_file_path = "./inventory.json"
 
+# ----------- data loading from local system --------------
 # reading user data
 def read_user_data():
     try:
@@ -26,7 +30,7 @@ def read_user_data():
 
     return existing_data
 
-# saving user data
+# saving user data 
 def save_user_data(user_data):
     existing_data = read_user_data()
     existing_data.append(user_data)
@@ -43,6 +47,31 @@ def is_user_registered(email):
 
     return False
 
+# load food data
+def load_data():
+    if not os.path.exists(data_file_path):
+        return []
+
+    try:
+        with open(data_file_path, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return []
+
+
+# save food data
+def save_data(data):
+    with open(data_file_path, 'w') as file:
+        json.dump(data, file)
+
+
+# initialize data on server run
+def initialize_food_items():
+    global food_items
+    food_items = load_data()
+
+initialize_food_items()
+
 
 # generating jwt
 def generate_jwt_token(user_id, email):
@@ -53,34 +82,41 @@ def generate_jwt_token(user_id, email):
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return token
 
-# checking role before accessing protected routes
-def authenticate_token(func):
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        token = request.headers.get('Authorization')
+# checking role before accessing protected routes (auth middleware)
+def authenticate_and_authorize(role):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            # Check if Authorization header is present
+            if 'Authorization' not in request.headers:
+                return jsonify({'message': 'Authorization required'}), 401
 
-        if not token:
-            return jsonify({'message': 'Missing token'}), 401
+            # Get the token from the Authorization header
+            token = request.headers['Authorization'].split()[1]
 
-        try:
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            role = payload.get('role')
+            try:
+                # Verify and decode the token
+                payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
 
-            if role != 'admin':
-                return jsonify({'message': 'Unauthorized access'}), 403
+                # Check if the role matches the required role
+                if payload['role'] != role:
+                    return jsonify({'message': 'Unauthorized access'}), 403
 
-            # Additional checks or validations based on the role can be performed here
+                # Perform the protected action
+                return func(*args, **kwargs)
 
-        except jwt.ExpiredSignatureError:
-            return jsonify({'message': 'Token expired'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'message': 'Invalid token'}), 401
+            except jwt.ExpiredSignatureError:
+                return jsonify({'message': 'Token has expired'}), 401
+            except jwt.InvalidTokenError:
+                return jsonify({'message': 'Invalid token'}), 401
 
-        return func(*args, **kwargs)
+        wrapper.__name__ = func.__name__
+        return wrapper
 
-    return decorated_function
+    return decorator
 
-# routes
+
+# ------------------------ routes ----------------------
+# user routes
 @app.route('/register', methods=['POST'])
 def register():
     email = request.json.get('email')
@@ -115,6 +151,68 @@ def login():
             return jsonify({'token': token}), 200
 
     return jsonify({'message': 'Invalid credentials'}), 401
+
+# menu route to show items avaialable to user
+@app.route('/menu', methods=['GET'])
+def get_menu():
+    check_food_items_exist()
+    menu_items = [item for item in food_items if item['availability'] == 'Yes']
+    return jsonify(menu_items)
+
+
+# protected routes with admin access only 
+# list of all the items avaialable in inventory
+@app.route("/dish",methods=["GET"])
+@authenticate_and_authorize("admin")
+def get_all_items():
+    initialize_food_items()
+    return jsonify(food_items), 200
+
+# create a food item
+@app.route("/dish",methods=["POST"])
+@authenticate_and_authorize("admin")
+def create_dish():
+    initialize_food_items()
+    data = request.get_json()
+    new_dish = {
+        "id":len(food_items)+1,
+        "name": data["name"],
+         'price': data['price'],
+        'availability': data['availability'],
+        'stock': data['stock']
+    }
+    food_items.append(new_dish)
+    # save updated data in file
+    save_data(food_items)
+    return jsonify({"msg":"Dish Created Successfully"})
+
+# update dish
+@app.route('/dish/<int:dish_id>', methods=['PATCH'])
+@authenticate_and_authorize("admin")
+def update_dish(dish_id):
+    initialize_food_items()()
+    dish = find_dish_by_id(dish_id)
+
+    if not dish:
+        return jsonify({'message': 'Dish not found'}), 404
+
+    data = request.get_json()
+
+    dish['name'] = data.get('name', dish['name'])
+    dish['price'] = data.get('price', dish['price'])
+    dish['availability'] = data.get('availability', dish['availability'])
+
+    # Reset stock to zero if availability is set to "No"
+    if dish['availability'] == 'No':
+        dish['stock'] = 0
+
+    # Save the updated data to the JSON file
+    save_data(food_items)
+
+    return jsonify({'message': 'Dish updated successfully'})
+
+
+
 
 if __name__ == '__main__':
     app.run(port=port or 3000)
