@@ -6,7 +6,6 @@ const url = "http://127.0.0.1:5000";
 const Home = () => {
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState([]);
-
   useEffect(() => {
     // Fetch the menu data from the API
     fetch(`${url}/menu`)

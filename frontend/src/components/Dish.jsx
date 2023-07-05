@@ -1,7 +1,6 @@
 // components/Dish.js
 import React, { useState } from "react";
 import {
-  Box,
   Button,
   Text,
   Select,
@@ -10,38 +9,49 @@ import {
   Center,
   HStack,
 } from "@chakra-ui/react";
-
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+const url = "http://127.0.0.1:5000";
 const Dish = ({ dish }) => {
   const [quantity, setQuantity] = useState(1);
   const toast = useToast();
+  const { auth, token } = useContext(AuthContext);
 
   const handleOrder = () => {
     // Check if the user is logged in
-    if (!localStorage.getItem("jwt")) {
+    if (!auth) {
       // Redirect to the login page
-      window.location.href = "/login";
+      toast({
+        title: "Please Login to Place Order",
+        position: "top",
+        status: "error",
+        variant: "top-accent",
+        duration: 1500,
+        isClosable: true,
+      });
       return;
     }
 
     // Place the order for the dish
-    fetch("/api/place-order", {
+    fetch(`${url}/place-order`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        dishId: dish.id,
-        quantity,
+        items: [{ item_id: dish.id, quantity: quantity }],
       }),
     })
       .then((response) => response.json())
       .then((data) => {
+        console.log(data);
+
         toast({
-          title: "Order Placed",
-          description: `Total Price: ${data.totalPrice}`,
+          title: "Order Placed Successfully",
+          description: `Total Price: $ ${data.total_price}`,
           status: "success",
-          duration: 3000,
+          duration: 4000,
           isClosable: true,
         });
       })
@@ -51,7 +61,7 @@ const Dish = ({ dish }) => {
           title: "Error",
           description: "Failed to place order",
           status: "error",
-          duration: 3000,
+          duration: 2000,
           isClosable: true,
         });
       });
@@ -89,7 +99,7 @@ const Dish = ({ dish }) => {
       <Button
         colorScheme="teal"
         onClick={handleOrder}
-        disabled={dish.stock === 0}
+        isDisabled={dish.stock === 0}
       >
         Order
       </Button>

@@ -4,14 +4,14 @@
         "name": "Samosa",
         "price": 40,
         "availability": "Yes",
-        "stock": 5
+        "stock": 0
     },
     {
         "id": 2,
         "name": "Chips",
         "price": 30,
         "availability": "Yes",
-        "stock": 5
+        "stock": 4
     },
     {
         "id": 3,
