@@ -12,7 +12,7 @@ import {
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 const url = "http://127.0.0.1:5000";
-const Dish = ({ dish }) => {
+const Dish = ({ dish, fetchData }) => {
   const [quantity, setQuantity] = useState(1);
   const toast = useToast();
   const { auth, token } = useContext(AuthContext);
@@ -46,7 +46,6 @@ const Dish = ({ dish }) => {
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
-
         toast({
           title: "Order Placed Successfully",
           description: `Total Price: $ ${data.total_price}`,
@@ -54,6 +53,7 @@ const Dish = ({ dish }) => {
           duration: 4000,
           isClosable: true,
         });
+        fetchData();
       })
       .catch((error) => {
         console.error("Error placing order:", error);

@@ -6,8 +6,7 @@ const url = "http://127.0.0.1:5000";
 const Home = () => {
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState([]);
-  useEffect(() => {
-    // Fetch the menu data from the API
+  function fetchData() {
     fetch(`${url}/menu`)
       .then((response) => response.json())
       .then((data) => {
@@ -18,6 +17,10 @@ const Home = () => {
         console.error("Error fetching menu:", error);
         setLoading(false);
       });
+  }
+  useEffect(() => {
+    // Fetch the menu data from the API
+    fetchData();
   }, []);
 
   if (loading) {
@@ -40,7 +43,7 @@ const Home = () => {
       </Center>
       <Grid gap={4} templateColumns="repeat(auto-fit, minmax(300px, 1fr))">
         {menu.map((dish) => (
-          <Dish key={dish.id} dish={dish} />
+          <Dish key={dish.id} fetchData={fetchData} dish={dish} />
         ))}
       </Grid>
     </Box>
