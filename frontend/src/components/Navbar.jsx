@@ -24,14 +24,23 @@ const Navbar = () => {
   return (
     <Box bg="gray.200" p={4}>
       <Flex justifyContent={"space-around"} alignItems={"center"}>
-        <Text fontSize="xl" fontWeight="bold">
-          MyFoodApp
-        </Text>
-        <Link to="/">Home</Link>
-        <Link to="/login">Login</Link>
-        <Link to="/register">Register</Link>
+        <Link to="/">
+          <Text fontSize={"1.2rem"} fontWeight="bold">
+            BiteBook
+          </Text>
+        </Link>
+        <Link to="/login">
+          <Text fontSize={"1.2rem"}>Login</Text>
+        </Link>
+        <Link to="/register">
+          <Text fontSize={"1.2rem"}>Register</Text>
+        </Link>
         {/* Show the Admin link if the user role is admin */}
-        {role == "Admin" && auth && <Link to="/admin">Admin</Link>}
+        {role == "Admin" && auth && (
+          <Link to="/admin">
+            <Text fontSize={"1.2rem"}>Admin</Text>
+          </Link>
+        )}
         {auth && (
           <Menu>
             <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>

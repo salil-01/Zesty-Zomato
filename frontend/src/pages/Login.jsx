@@ -76,11 +76,12 @@ const LoginForm = () => {
     <Box
       maxWidth="md"
       mx="auto"
-      mt={8}
+      mt={"10%"}
       p={4}
       borderWidth="1px"
       borderRadius="md"
       boxShadow="lg"
+      border={"1px dotted gray"}
     >
       <Heading mb={4} textAlign={"center"}>
         Login
