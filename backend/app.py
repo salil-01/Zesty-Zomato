@@ -263,7 +263,7 @@ def create_dish():
     new_dish = {
         "id":len(food_items)+1,
         "name": data["name"],
-         'price': data['price'],
+        'price': data['price'],
         'availability': data['availability'],
         'stock': data['stock']
     }

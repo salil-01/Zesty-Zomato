@@ -12,6 +12,7 @@ import { useContext } from "react";
 import DishCard from "../components/DishCard";
 import { AuthContext } from "../context/AuthContext";
 import OrdersPage from "../components/Orders";
+import AddDish from "../components/AddDish";
 const url = "http://127.0.0.1:5000";
 function Admin() {
   const [inventoryComponent, setInventoryComponent] = useState(true);
@@ -158,6 +159,7 @@ function Admin() {
         >
           Orders
         </Button>
+        <AddDish fetchData={fetchData} setLoading={setLoading} />
       </Flex>
       {inventoryComponent && (
         <SimpleGrid

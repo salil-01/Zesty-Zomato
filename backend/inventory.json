@@ -1,51 +1,65 @@
 [
-    {
-        "id": 3,
-        "name": "Limca",
-        "price": 40,
-        "availability": "Yes",
-        "stock": 6
-    },
-    {
-        "id": 4,
-        "name": "Soda",
-        "price": 60,
-        "availability": "Yes",
-        "stock": 15
-    },
-    {
-        "id": 5,
-        "name": "Berger",
-        "price": 90,
-        "availability": "Yes",
-        "stock": 5
-    },
-    {
-        "id": 6,
-        "name": "Pizza",
-        "price": 260,
-        "availability": "Yes",
-        "stock": 7
-    },
-    {
-        "id": 7,
-        "name": "Fries",
-        "price": 80,
-        "availability": "Yes",
-        "stock": 12
-    },
-    {
-        "id": 8,
-        "name": "Updates",
-        "price": 40,
-        "availability": "Yes",
-        "stock": 7
-    },
-    {
-        "id": 9,
-        "name": "Updated Name",
-        "price": 40,
-        "availability": "Yes",
-        "stock": 4
-    }
+  {
+    "id": 3,
+    "name": "Limca",
+    "price": 40,
+    "availability": "Yes",
+    "stock": 6
+  },
+  {
+    "id": 4,
+    "name": "Soda",
+    "price": 60,
+    "availability": "Yes",
+    "stock": 15
+  },
+  {
+    "id": 5,
+    "name": "Berger",
+    "price": 90,
+    "availability": "Yes",
+    "stock": 5
+  },
+  {
+    "id": 6,
+    "name": "Pizza",
+    "price": 260,
+    "availability": "Yes",
+    "stock": 7
+  },
+  {
+    "id": 7,
+    "name": "Fries",
+    "price": 80,
+    "availability": "Yes",
+    "stock": 12
+  },
+  {
+    "id": 8,
+    "name": "Updates",
+    "price": 40,
+    "availability": "Yes",
+    "stock": 7
+  },
+  {
+    "id": 9,
+    "name": "Updated Name",
+    "price": 40,
+    "availability": "Yes",
+    "stock": 4
+  },
+  {
+    "id": 10,
+    "name": "New Dish",
+    "price": 43,
+    "availability": "Yes",
+    "stock": 3
+  },
+  {
+    "id": 11,
+    "name": "New Dish 2",
+    "price": 43,
+    "availability": "Yes",
+    "stock": 3
+  }
 ]

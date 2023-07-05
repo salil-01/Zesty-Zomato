@@ -118,7 +118,7 @@ function DishCard({ dish, onEdit, onDelete }) {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <Divider margin={"10px"} />
+      <Divider margin={"10px 0px 10px 0px"} />
     </Card>
   );
 }
