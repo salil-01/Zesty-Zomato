@@ -8,17 +8,65 @@ import {
   Input,
   Select,
   Stack,
+  useToast,
 } from "@chakra-ui/react";
-
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+const url = "http://127.0.0.1:5000";
 const RegisterForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
-
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
+  const navigate = useNavigate();
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle register logic here
-    // ...
+    if (email && password && role) {
+      const formData = {
+        email,
+        password,
+        role,
+      };
+      setLoading(true);
+      try {
+        const response = await axios.post(`${url}/register`, formData);
+        console.log(response);
+        setLoading(false);
+        toast({
+          title: "Account Created Successfully",
+          position: "top",
+          status: "success",
+          variant: "top-accent",
+          duration: 2000,
+          isClosable: true,
+        });
+        setEmail("");
+        setPassword("");
+        setRole("");
+        navigate("/login");
+      } catch (error) {
+        console.log(error);
+        setLoading(false);
+        toast({
+          title: "Server Error",
+          position: "top",
+          status: "error",
+          variant: "top-accent",
+          duration: 1500,
+          isClosable: true,
+        });
+      }
+    } else {
+      toast({
+        title: "Please fill in all the fields",
+        position: "top",
+        status: "error",
+        variant: "top-accent",
+        duration: 1500,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -31,7 +79,9 @@ const RegisterForm = () => {
       borderRadius="md"
       boxShadow="lg"
     >
-      <Heading mb={4}>Register</Heading>
+      <Heading mb={4} textAlign={"center"}>
+        Register
+      </Heading>
       <form onSubmit={handleSubmit}>
         <Stack spacing={4}>
           <FormControl id="email">
@@ -59,11 +109,17 @@ const RegisterForm = () => {
               onChange={(e) => setRole(e.target.value)}
               required
             >
-              <option value="admin">Admin</option>
-              <option value="user">User</option>
+              <option value="">Select Role</option>
+              <option value="Admin">Admin</option>
+              <option value="User">User</option>
             </Select>
           </FormControl>
-          <Button colorScheme="teal" type="submit">
+          <Button
+            colorScheme="teal"
+            type="submit"
+            isLoading={loading}
+            loadingText="Registering..."
+          >
             Register
           </Button>
         </Stack>

@@ -4,5 +4,11 @@
         "email": "chunnu@mail",
         "password": "chunnu",
         "role": "Admin"
+    },
+    {
+        "id": "75c15491-a11c-422a-b89b-3f748bfd9301",
+        "email": "munnu@mail",
+        "password": "munnu",
+        "role": "User"
     }
 ]

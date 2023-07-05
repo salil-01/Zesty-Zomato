@@ -83,7 +83,9 @@ const LoginForm = () => {
       borderRadius="md"
       boxShadow="lg"
     >
-      <Heading mb={4}>Login</Heading>
+      <Heading mb={4} textAlign={"center"}>
+        Login
+      </Heading>
       <form onSubmit={handleSubmit}>
         <Stack spacing={4}>
           <FormControl id="email">
