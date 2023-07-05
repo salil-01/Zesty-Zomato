@@ -131,10 +131,11 @@ def find_order_by_id(id):
 
 
 # generating jwt
-def generate_jwt_token(role, email):
+def generate_jwt_token(role, email,id):
     payload = {
         'role': role,
-        'email': email
+        'email': email,
+        "id":id
     }
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return token
@@ -161,6 +162,8 @@ def authenticate_and_authorize(role):
                 # Perform the protected action
                 # using g module of flask to attach mail to request object
                 g.user_email = payload["email"]
+                g.user_id = payload["id"]
+                print(payload["id"])
                 return func(*args, **kwargs)
 
             except jwt.ExpiredSignatureError:
@@ -211,7 +214,8 @@ def login():
 
     if user_data is not None and user_data[2] == password:
         role = user_data[3]
-        token = generate_jwt_token(role, email)
+        id = user_data[0]
+        token = generate_jwt_token(role, email,id)
         return jsonify({'token': token, 'role': role, 'email': email}), 200
 
     return jsonify({'message': 'Invalid credentials'}), 401
@@ -268,54 +272,164 @@ def get_menu():
 @authenticate_and_authorize("Admin" or "User")
 def place_order():
     # Get data from the request body
+    # user_email = g.user_email
+    # data = request.json
+    # order_items = data.get('items', {})
+    # print(order_items)
+    # load_data()
+    # load_orders()
+    
+    # # Validate the order items
+    # # if not isinstance(order_items, dict) or len(order_items) == 0:
+    # #     return jsonify({'message': 'Invalid order items'}), 400
+
+    # total_price = 0
+    # order_items_dict = {}
+
+    # # Process each order item
+    # for item_id, quantity in order_items():
+    #     # Find the selected food item
+    #     food_item = next((item for item in food_items if item['id'] == item_id), None)
+
+    #     # Check if the food item exists
+    #     if food_item is None:
+    #         return jsonify({'message': 'Invalid food item ID'}), 400
+
+    #     # Check if the food item is available
+    #     if food_item['availability'] != 'Yes':
+    #         return jsonify({'message': 'Food item is not available'}), 400
+
+    #     # Check if the quantity is greater than the available stock
+    #     if quantity > food_item['stock']:
+    #         return jsonify({'message': 'Insufficient stock'}), 400
+
+    #     # Calculate the total price for the current item
+    #     item_price = food_item['price'] * quantity
+    #     total_price += item_price
+
+    #     # Update the stock of the food item
+    #     food_item['stock'] -= quantity
+        
+    #     # Add the quantity to the order item dictionary
+    #     order_items_dict[item_id] = quantity
+
+    # # Convert the order_items_dict to a list of items
+    # order_items_list = [{'item_id': item_id, 'quantity': quantity} for item_id, quantity in order_items_dict.items()]
+    
+    # # Return the response with the total price
+    # order = {
+    #     "order_id": str(uuid.uuid4()),
+    #     "customer": user_email,
+    #     "total_price": total_price,
+    #     "status": "Received",
+    #     "items": order_items_list
+    # }
+    # orders.append(order)
+    # save_orders()
+    # save_data(food_items)
+
+    # mysql
+   # Get data from the request body
     user_email = g.user_email
+    user_id = int(g.user_id)
     data = request.json
-    order_items = data.get('items', [])
-    load_orders()
-    # Validate the order items
-    if not isinstance(order_items, list) or len(order_items) == 0:
-        return jsonify({'message': 'Invalid order items'}), 400
+    item_id = int(data.get('id'))
+    quantity = int(data.get('quantity'))
+    
+    # Validate the order data
+    if not item_id or not quantity:
+        return jsonify({'message': 'Invalid order data'}), 400
+    
+     # Find the selected food item
+    cursor = connection.cursor()
+    select_query = "SELECT * FROM dishes WHERE id = %s"
+    cursor.execute(select_query, (item_id,))
+    food_item = cursor.fetchone()
+    print(food_item)
+    if food_item is None:
+        cursor.close()
+        return jsonify({'message': 'Invalid food item ID'}), 400
+    
+    # Check if the food item is available
+    if food_item[3] != 'Yes':
+        cursor.close()
+        return jsonify({'message': 'Food item is not available'}), 400
 
-    total_price = 0
+    # Check if the quantity is greater than the available stock
+    
+    if quantity > food_item[4]:
+        cursor.close()
+        return jsonify({'message': 'Insufficient stock'}), 400
 
-    # Process each order item
-    for item in order_items:
-        item_id = item.get('item_id')
-        quantity = item.get('quantity')
+    # Calculate the total price for the current item
+    total_price = food_item[2] * quantity
 
-        # Find the selected food item
-        food_item = next((item for item in food_items if item['id'] == item_id), None)
+    # Update the stock of the food item
+    new_stock = food_item[4] - quantity
+    update_query = "UPDATE dishes SET stock = %s, availability = %s WHERE id = %s"
+    update_values = (new_stock, 'No' if new_stock == 0 else 'Yes', item_id)
+    cursor.execute(update_query, update_values)
+    connection.commit()
 
-        # Check if the food item exists
-        if food_item is None:
-            return jsonify({'message': 'Invalid food item ID'}), 400
-
-        # Check if the food item is available
-        if food_item['availability'] != 'Yes':
-            return jsonify({'message': 'Food item is not available'}), 400
-
-        # Check if the quantity is greater than the available stock
-        if quantity > food_item['stock']:
-            return jsonify({'message': 'Insufficient stock'}), 400
-
-        # Calculate the total price for the current item
-        item_price = food_item['price'] * quantity
-        total_price += item_price
-
-        # Update the stock of the food item
-        food_item['stock'] -= quantity
-
-    # Return the response with the total price
-    order = {
-        "order_id": str(uuid.uuid4()),
-        "customer": user_email,
-        "total_price": total_price,
-        "status": "Received"
-    }
-    orders.append(order)
-    save_orders()
-    save_data(food_items)
+    # Insert the order into the orders table
+    insert_query = "INSERT INTO orders (email, total_price, status, user_id,item_id) VALUES (%s, %s, %s,%s,%s)"
+    insert_values = (user_email, total_price, 'Received', user_id,item_id,)
+    cursor.execute(insert_query, insert_values)
+    connection.commit()
+    cursor.close()
+    
     return jsonify({'message': 'Order placed successfully', 'total_price': total_price}), 200
+
+# def place_order():
+#     # Get data from the request body
+#     user_email = g.user_email
+#     data = request.json
+#     order_items = data.get('items', [])
+#     load_orders()
+#     # Validate the order items
+#     if not isinstance(order_items, list) or len(order_items) == 0:
+#         return jsonify({'message': 'Invalid order items'}), 400
+
+#     total_price = 0
+
+#     # Process each order item
+#     for item in order_items:
+#         item_id = item.get('item_id')
+#         quantity = item.get('quantity')
+
+#         # Find the selected food item
+#         food_item = next((item for item in food_items if item['id'] == item_id), None)
+
+#         # Check if the food item exists
+#         if food_item is None:
+#             return jsonify({'message': 'Invalid food item ID'}), 400
+
+#         # Check if the food item is available
+#         if food_item['availability'] != 'Yes':
+#             return jsonify({'message': 'Food item is not available'}), 400
+
+#         # Check if the quantity is greater than the available stock
+#         if quantity > food_item['stock']:
+#             return jsonify({'message': 'Insufficient stock'}), 400
+
+#         # Calculate the total price for the current item
+#         item_price = food_item['price'] * quantity
+#         total_price += item_price
+
+#         # Update the stock of the food item
+#         food_item['stock'] -= quantity
+
+#     # Return the response with the total price
+#     order = {
+#         "order_id": str(uuid.uuid4()),
+#         "customer": user_email,
+#         "total_price": total_price,
+#         "status": "Received"
+#     }
+#     orders.append(order)
+#     save_orders()
+#     save_data(food_items)
+#     return jsonify({'message': 'Order placed successfully', 'total_price': total_price}), 200
 
 
 # protected routes with admin access only 
