@@ -289,6 +289,24 @@ def update_dish(dish_id):
 
     return jsonify({'message': 'Dish updated successfully'}), 200
 
+#  delete dish
+@app.route('/dish/<int:dish_id>', methods=['DELETE'])
+@authenticate_token
+def delete_dish(dish_id):
+    initialize_food_items()
+    dish = find_dish_by_id(dish_id)
+
+    if not dish:
+        return jsonify({'message': 'Dish not found'}), 404
+
+    food_items.remove(dish)
+
+    # Save the updated data to the JSON file
+    save_data(food_items)
+
+    return jsonify({'message': 'Dish deleted successfully'})
+
+    
 # all orders
 @app.route("/orders", methods=["GET"])
 @authenticate_and_authorize("Admin")
