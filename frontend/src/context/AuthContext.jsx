@@ -14,15 +14,17 @@ export const AuthContextProvider = ({ children }) => {
   const [auth, setAuth] = useState(false || getData("auth"));
   const [name, setName] = useState("" || getData("username"));
   const [role, setRole] = useState("" || getData("role"));
-  const login = (token, username) => {
+  const login = (token, username, role) => {
     setName(username);
     setToken(token);
     setAuth(true);
+    setRole(role);
   };
   const logout = () => {
     setToken("");
     setName("");
     setAuth(false);
+    setRole("");
   };
   useEffect(() => {
     setData("token", token);
@@ -31,7 +33,7 @@ export const AuthContextProvider = ({ children }) => {
     setRole("role", role);
   }, [auth]);
   return (
-    <AuthContext.Provider value={{ login, logout, token, name, auth }}>
+    <AuthContext.Provider value={{ login, logout, token, name, auth, role }}>
       {children}
     </AuthContext.Provider>
   );
