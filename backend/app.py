@@ -4,6 +4,7 @@ import uuid
 import jwt
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify,g
+from flask_cors import CORS
 
 # Load environment variables from .env file
 load_dotenv()
@@ -12,6 +13,7 @@ secretKey = os.getenv("secretKey")
 
 # Create Flask application
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = secretKey
 
 # global variables to store user and food data
@@ -291,7 +293,7 @@ def update_dish(dish_id):
 
 #  delete dish
 @app.route('/dish/<int:dish_id>', methods=['DELETE'])
-@authenticate_token
+@authenticate_and_authorize("Admin")
 def delete_dish(dish_id):
     initialize_food_items()
     dish = find_dish_by_id(dish_id)
