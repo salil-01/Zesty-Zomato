@@ -1,19 +1,5 @@
 [
     {
-        "id": 1,
-        "name": "Change",
-        "price": 40,
-        "availability": "No",
-        "stock": 0
-    },
-    {
-        "id": 2,
-        "name": "Chips",
-        "price": 30,
-        "availability": "Yes",
-        "stock": 2
-    },
-    {
         "id": 3,
         "name": "Limca",
         "price": 40,

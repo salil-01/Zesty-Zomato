@@ -20,7 +20,7 @@ import {
 import { useState } from "react";
 
 function DishCard({ dish, onEdit, onDelete }) {
-  //   console.log(dish);
+  // console.log(dish);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editedDish, setEditedDish] = useState(dish);
 
@@ -43,7 +43,13 @@ function DishCard({ dish, onEdit, onDelete }) {
   };
 
   return (
-    <Card boxShadow="lg" borderRadius="md" p={4} mb={4}>
+    <Card
+      boxShadow="lg"
+      borderRadius="md"
+      p={4}
+      mb={4}
+      border={"1px dotted gray"}
+    >
       <Heading textAlign={"center"} size="md" mb={2}>
         {dish.name}
       </Heading>
