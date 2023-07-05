@@ -36,30 +36,9 @@
   },
   {
     "id": 8,
-    "name": "Updates",
-    "price": 40,
-    "availability": "Yes",
-    "stock": 7
-  },
-  {
-    "id": 9,
-    "name": "Updated Name",
-    "price": 40,
-    "availability": "Yes",
-    "stock": 4
-  },
-  {
-    "id": 10,
     "name": "New Dish",
-    "price": 43,
+    "price": 0,
     "availability": "Yes",
-    "stock": 3
-  },
-  {
-    "id": 11,
-    "name": "New Dish 2",
-    "price": 43,
-    "availability": "Yes",
-    "stock": 3
+    "stock": 0
   }
 ]

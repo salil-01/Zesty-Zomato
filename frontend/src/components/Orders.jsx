@@ -62,6 +62,7 @@ function OrdersPage() {
         console.log(data);
         toast({
           title: "Order Updated Successfully",
+          position: "top",
           status: "success",
           duration: 2000,
           isClosable: true,
@@ -74,6 +75,7 @@ function OrdersPage() {
         setLoading(false);
         toast({
           title: "Error while Updating Order",
+          position: "top",
           status: "error",
           duration: 2000,
           isClosable: true,

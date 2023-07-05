@@ -76,6 +76,7 @@ function Admin() {
           status: "success",
           duration: 2000,
           isClosable: true,
+          position: "top",
         });
         fetchData();
         setLoading(false);
@@ -88,6 +89,7 @@ function Admin() {
           status: "error",
           duration: 2000,
           isClosable: true,
+          position: "top",
         });
       });
   };
@@ -111,6 +113,7 @@ function Admin() {
           status: "success",
           duration: 2000,
           isClosable: true,
+          position: "top",
         });
         fetchData();
         setLoading(false);
@@ -123,6 +126,7 @@ function Admin() {
           status: "error",
           duration: 2000,
           isClosable: true,
+          position: "top",
         });
       });
   };

@@ -59,6 +59,7 @@ function AddDish({ fetchData, setLoading }) {
           status: "success",
           duration: 2000,
           isClosable: true,
+          position: "top",
         });
         fetchData();
         setLoading(false);
@@ -73,6 +74,7 @@ function AddDish({ fetchData, setLoading }) {
           status: "error",
           duration: 2000,
           isClosable: true,
+          position: "top",
         });
       });
     // onSubmit(formData);
@@ -81,11 +83,13 @@ function AddDish({ fetchData, setLoading }) {
 
   return (
     <>
-      <Button onClick={onOpen}>Add Dish</Button>
+      <Button onClick={onOpen} variant={"outline"} colorScheme={"blue"}>
+        Add Dish
+      </Button>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Add Dish</ModalHeader>
+          <ModalHeader>Add A Dish</ModalHeader>
           <ModalCloseButton />
           <form onSubmit={handleSubmit}>
             <ModalBody>
@@ -129,7 +133,7 @@ function AddDish({ fetchData, setLoading }) {
             </ModalBody>
             <ModalFooter>
               <Button type="submit" colorScheme="blue">
-                Submit
+                Add
               </Button>
               <Button onClick={onClose}>Cancel</Button>
             </ModalFooter>

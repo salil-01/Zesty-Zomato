@@ -52,6 +52,7 @@ const Dish = ({ dish, fetchData }) => {
           status: "success",
           duration: 4000,
           isClosable: true,
+          position: "top",
         });
         fetchData();
       })
@@ -63,6 +64,7 @@ const Dish = ({ dish, fetchData }) => {
           status: "error",
           duration: 2000,
           isClosable: true,
+          position: "top",
         });
       });
   };

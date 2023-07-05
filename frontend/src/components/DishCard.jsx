@@ -68,7 +68,7 @@ function DishCard({ dish, onEdit, onDelete }) {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Edit Dish</ModalHeader>
+          <ModalHeader>Update A Dish</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Box mb={4}>
@@ -112,7 +112,7 @@ function DishCard({ dish, onEdit, onDelete }) {
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleSave}>
-              Save
+              Update
             </Button>
             <Button onClick={onClose}>Cancel</Button>
           </ModalFooter>

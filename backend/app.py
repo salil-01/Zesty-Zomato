@@ -5,16 +5,20 @@ import jwt
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify,g
 from flask_cors import CORS
+import openai
+
 
 # Load environment variables from .env file
 load_dotenv()
 port = os.getenv("port")
 secretKey = os.getenv("secretKey")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Create Flask application
 app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = secretKey
+app.config['OPENAI_API_KEY'] = OPENAI_API_KEY
 
 # global variables to store user and food data
 existing_data = []
@@ -184,7 +188,31 @@ def login():
     return jsonify({'message': 'Invalid credentials'}), 401
 
 # non protected routes
-# menu route to show items avaialable to user
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_message = request.json.get("user_message")  # Get the user's message from the request
+    print(user_message)
+    openai_api_key = app.config['OPENAI_API_KEY']  # Get the OpenAI API key from the app config
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "Welcome to the Food App Assistant! How can I assist you with your food-related queries?"},
+            {"role": "user", "content": user_message}
+        ],
+        api_key=openai_api_key
+    )
+
+    # Get the response from OpenAI
+    bot_response = response.choices[0].message.content
+
+    # Return the bot's response to the client
+    return jsonify({'response': bot_response})
+    # return jsonify({"res":"Ok"})
+
+
+# # menu route to show items avaialable to everyone
 @app.route('/menu', methods=['GET'])
 def get_menu():
     initialize_food_items()
