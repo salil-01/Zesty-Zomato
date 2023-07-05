@@ -15,6 +15,7 @@ export const AuthContextProvider = ({ children }) => {
   const [name, setName] = useState("" || getData("username"));
   const [role, setRole] = useState("" || getData("role"));
   const login = (token, username, role) => {
+    console.log(token, username, role);
     setName(username);
     setToken(token);
     setAuth(true);
@@ -30,7 +31,7 @@ export const AuthContextProvider = ({ children }) => {
     setData("token", token);
     setData("username", name);
     setData("auth", auth);
-    setRole("role", role);
+    setData("role", role);
   }, [auth]);
   return (
     <AuthContext.Provider value={{ login, logout, token, name, auth, role }}>

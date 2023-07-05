@@ -277,14 +277,17 @@ def update_dish(dish_id):
         return jsonify({'message': 'Dish not found'}), 404
 
     data = request.get_json()
-
+    # app.logger.debug(data)
     dish['name'] = data.get('name', dish['name'])
     dish['price'] = data.get('price', dish['price'])
+    dish['stock'] = data.get('stock', dish['stock'])
     dish['availability'] = data.get('availability', dish['availability'])
 
     # Reset stock to zero if availability is set to "No"
     if dish['availability'] == 'No':
         dish['stock'] = 0
+    if dish['stock'] == 0:
+        dish['availability'] = 'No'
 
     # Save the updated data to the JSON file
     save_data(food_items)

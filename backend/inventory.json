@@ -1,9 +1,9 @@
 [
     {
         "id": 1,
-        "name": "Samosa",
+        "name": "Change",
         "price": 40,
-        "availability": "Yes",
+        "availability": "No",
         "stock": 0
     },
     {
