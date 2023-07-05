@@ -182,8 +182,8 @@ def register():
     password = request.json.get('password')
     role = request.json.get('role')
 
-    if is_user_registered(email):
-        return jsonify({'message': 'User already exists'}), 400
+    # if is_user_registered(email):
+    #     return jsonify({'message': 'User already exists'}), 400
 
     # connection = get_mysql_connection()
     cursor = connection.cursor()
@@ -202,15 +202,7 @@ def login():
     email = request.json.get('email')
     password = request.json.get('password')
 
-    # existing_data = read_user_data()
-    # for user in existing_data:
-    #     if user['email'] == email and user['password'] == password:
-    #         role = user['role']
-    #         token = generate_jwt_token(role, email)
-    #         return jsonify({'token': token, "role":role,"email":email}), 200
-
-    # return jsonify({'message': 'Invalid credentials'}), 401
-
+    # connecting with db
     cursor = connection.cursor()
     query = "SELECT * FROM users WHERE email = %s"
     cursor.execute(query, (email,))
@@ -251,8 +243,24 @@ def chat():
 # # menu route to show items avaialable to everyone
 @app.route('/menu', methods=['GET'])
 def get_menu():
-    initialize_food_items()
-    menu_items = [item for item in food_items if item['availability'] == 'Yes']
+    # initialize_food_items()
+    # menu_items = [item for item in food_items if item['availability'] == 'Yes']
+
+    # mysql
+    cursor = connection.cursor()
+    query = "SELECT * FROM dishes WHERE availability = 'Yes'"
+    cursor.execute(query)
+    menu_items = []
+    for item in cursor.fetchall():
+        dish = {
+            "id": item[0],
+            "name": item[1],
+            "price": item[2],
+            "availability": item[3],
+            "stock": item[4]
+        }
+        menu_items.append(dish)
+    cursor.close()
     return jsonify(menu_items)
 
 # multiple order taking facility
@@ -322,45 +330,82 @@ def get_all_items():
 @app.route("/dish",methods=["POST"])
 @authenticate_and_authorize("Admin")
 def create_dish():
-    initialize_food_items()
+    # initialize_food_items()
     data = request.get_json()
-    new_dish = {
-        "id":str(uuid.uuid4()),
-        "name": data["name"],
-        'price': data['price'],
-        'availability': data['availability'],
-        'stock': data['stock']
-    }
-    food_items.append(new_dish)
-    # save updated data in file
-    save_data(food_items)
+    # new_dish = {
+    #     "id":str(uuid.uuid4()),
+    #     "name": data["name"],
+    #     'price': data['price'],
+    #     'availability': data['availability'],
+    #     'stock': data['stock']
+    # }
+    # food_items.append(new_dish)
+    # # save updated data in file
+    # save_data(food_items)
+   
+#    mysql code
+    cursor = connection.cursor()
+    query = "INSERT INTO dishes (name, price, availability, stock) VALUES (%s, %s, %s, %s)"
+    dish_values = (data['name'], data['price'], data['availability'], data['stock'])
+    cursor.execute(query, dish_values)
+    connection.commit()
+    cursor.close()
     return jsonify({"msg":"Dish Created Successfully"})
 
 # update dish
 @app.route('/dish/<dish_id>', methods=['PATCH'])
 @authenticate_and_authorize("Admin")
 def update_dish(dish_id):
-    initialize_food_items()
-    dish = find_dish_by_id(dish_id)
+    # initialize_food_items()
+    # dish = find_dish_by_id(dish_id)
+
+    # if not dish:
+    #     return jsonify({'message': 'Dish not found'}), 404
+
+    # data = request.get_json()
+    # # app.logger.debug(data)
+    # dish['name'] = data.get('name', dish['name'])
+    # dish['price'] = data.get('price', dish['price'])
+    # dish['stock'] = data.get('stock', dish['stock'])
+    # dish['availability'] = data.get('availability', dish['availability'])
+
+    # # Reset stock to zero if availability is set to "No"
+    # if dish['availability'] == 'No':
+    #     dish['stock'] = 0
+    # if dish['stock'] == 0:
+    #     dish['availability'] = 'No'
+
+    # # Save the updated data to the JSON file
+    # save_data(food_items)
+
+
+    # mysql
+    cursor = connection.cursor()
+    query = "SELECT * FROM dishes WHERE id = %s"
+    cursor.execute(query, (dish_id,))
+    dish = cursor.fetchone()
 
     if not dish:
+        cursor.close()
         return jsonify({'message': 'Dish not found'}), 404
 
     data = request.get_json()
-    # app.logger.debug(data)
-    dish['name'] = data.get('name', dish['name'])
-    dish['price'] = data.get('price', dish['price'])
-    dish['stock'] = data.get('stock', dish['stock'])
-    dish['availability'] = data.get('availability', dish['availability'])
+    name = data.get('name', dish[1])
+    price = data.get('price', dish[2])
+    stock = data.get('stock', dish[4])
+    availability = data.get('availability', dish[3])
 
     # Reset stock to zero if availability is set to "No"
-    if dish['availability'] == 'No':
-        dish['stock'] = 0
-    if dish['stock'] == 0:
-        dish['availability'] = 'No'
+    if availability == 'No':
+        stock = 0
+    if stock == 0:
+        availability = 'No'
 
-    # Save the updated data to the JSON file
-    save_data(food_items)
+    update_query = "UPDATE dishes SET name = %s, price = %s, stock = %s, availability = %s WHERE id = %s"
+    update_values = (name, price, stock, availability, dish_id)
+    cursor.execute(update_query, update_values)
+    connection.commit()
+    cursor.close()
 
     return jsonify({'message': 'Dish updated successfully'}), 200
 
@@ -368,16 +413,31 @@ def update_dish(dish_id):
 @app.route('/dish/<dish_id>', methods=['DELETE'])
 @authenticate_and_authorize("Admin")
 def delete_dish(dish_id):
-    initialize_food_items()
-    dish = find_dish_by_id(dish_id)
+    # initialize_food_items()
+    # dish = find_dish_by_id(dish_id)
+
+    # if not dish:
+    #     return jsonify({'message': 'Dish not found'}), 404
+
+    # food_items.remove(dish)
+
+    # # Save the updated data to the JSON file
+    # save_data(food_items)
+
+    # mysql
+    cursor = connection.cursor()
+    query = "SELECT * FROM dishes WHERE id = %s"
+    cursor.execute(query, (dish_id,))
+    dish = cursor.fetchone()
 
     if not dish:
+        cursor.close()
         return jsonify({'message': 'Dish not found'}), 404
 
-    food_items.remove(dish)
-
-    # Save the updated data to the JSON file
-    save_data(food_items)
+    delete_query = "DELETE FROM dishes WHERE id = %s"
+    cursor.execute(delete_query, (dish_id,))
+    connection.commit()
+    cursor.close()
 
     return jsonify({'message': 'Dish deleted successfully'})
 
