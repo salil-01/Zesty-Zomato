@@ -3,72 +3,18 @@
         "order_id": 1,
         "customer": "chunnu@mail",
         "total_price": 220,
-        "status": "Received"
+        "status": "New"
     },
     {
         "order_id": 2,
         "customer": "chunnu@mail",
-        "total_price": 120,
-        "status": "Received"
+        "total_price": 220,
+        "status": "Change"
     },
     {
         "order_id": 3,
         "customer": "chunnu@mail",
-        "total_price": 120,
-        "status": "Received"
-    },
-    {
-        "order_id": 4,
-        "customer": "chunnu@mail",
-        "total_price": 150,
-        "status": "Received"
-    },
-    {
-        "order_id": 5,
-        "customer": "chunnu@mail",
-        "total_price": 40,
-        "status": "Received"
-    },
-    {
-        "order_id": 6,
-        "customer": "chunnu@mail",
-        "total_price": 40,
-        "status": "Received"
-    },
-    {
-        "order_id": 7,
-        "customer": "chunnu@mail",
-        "total_price": 40,
-        "status": "Received"
-    },
-    {
-        "order_id": 8,
-        "customer": "chunnu@mail",
-        "total_price": 40,
-        "status": "Received"
-    },
-    {
-        "order_id": 9,
-        "customer": "chunnu@mail",
-        "total_price": 30,
-        "status": "Received"
-    },
-    {
-        "order_id": 10,
-        "customer": "chunnu@mail",
-        "total_price": 40,
-        "status": "Received"
-    },
-    {
-        "order_id": 11,
-        "customer": "chunnu@mail",
-        "total_price": 30,
-        "status": "Received"
-    },
-    {
-        "order_id": 12,
-        "customer": "chunnu@mail",
-        "total_price": 30,
-        "status": "Received"
+        "total_price": 220,
+        "status": "New"
     }
 ]

@@ -95,6 +95,12 @@ def find_dish_by_id(id):
         if (item["id"]==id):
             return item
 
+# find order by id
+def find_order_by_id(id):
+    for item in orders:
+        if (item["order_id"]==id):
+            return item
+
 
 # generating jwt
 def generate_jwt_token(role, email):
@@ -319,6 +325,23 @@ def display_orders():
    load_orders()
    return jsonify(orders),200
 
+@app.route ("/orders/<int:order_id>", methods = ["PATCH"])
+@authenticate_and_authorize("Admin")
+def update_status(order_id):
+    load_orders()
+    order = find_order_by_id(order_id)
+    # app.logger.debug(order)
+    if not order:
+        return jsonify({'message': 'Order not found'}), 404
+
+    data = request.get_json()
+    # app.logger.debug(data)
+    order['status'] = data.get('status', order['status'])
+    
+    # Save the updated data to the JSON file
+    save_orders()
+
+    return jsonify({'message': 'Order updated successfully'}), 200
 
 
 if __name__ == '__main__':
