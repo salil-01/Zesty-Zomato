@@ -6,19 +6,41 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify,g
 from flask_cors import CORS
 import openai
-
+import mysql.connector
 
 # Load environment variables from .env file
 load_dotenv()
 port = os.getenv("port")
 secretKey = os.getenv("secretKey")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+username = os.getenv("username")
+password = os.getenv("password")
+databasename = os.getenv("databasename")
+
 
 # Create Flask application
 app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = secretKey
 app.config['OPENAI_API_KEY'] = OPENAI_API_KEY
+app.config['MYSQL_HOST'] = "localhost"
+app.config['MYSQL_USER'] = username
+# app.config['MYSQL_PASSWORD'] = password
+app.config['MYSQL_DB'] = databasename
+
+# mysql connection
+try:
+    connection = mysql.connector.connect(
+        host=app.config['MYSQL_HOST'],
+        user=app.config['MYSQL_USER'],
+        # password=app.config['MYSQL_PASSWORD'],
+        database=app.config['MYSQL_DB']
+    )
+    if connection.is_connected():
+        print("Connected to MYSQL")
+except mysql.connector.Error as e:
+    print(f"Error Connecting to MYSQL {e}")
+
 
 # global variables to store user and food data
 existing_data = []
@@ -47,12 +69,14 @@ def save_user_data(user_data):
 
 # checking if user already registered
 def is_user_registered(email):
-    existing_data = read_user_data()
-    for user in existing_data:
-        if user['email'] == email:
-            return True
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM users WHERE email = %(email)s", {'email': email})
+    count = cursor.fetchone()[0]
 
-    return False
+    cursor.close()
+    connection.close()
+
+    return count > 0
 
 # load food data
 def load_data():
@@ -161,15 +185,15 @@ def register():
     if is_user_registered(email):
         return jsonify({'message': 'User already exists'}), 400
 
-    user_id = str(uuid.uuid4())  # Generate a unique ID
-    user_data = {
-        'id': user_id,
-        'email': email,
-        'password': password,
-        'role': role
-    }
+    # connection = get_mysql_connection()
+    cursor = connection.cursor()
 
-    save_user_data(user_data)
+    query = "INSERT INTO users ( email, password, role) VALUES (%s, %s, %s)"
+    values = ( email, password, role)
+    cursor.execute(query, values)
+    connection.commit()
+    cursor.close()
+    connection.close()
 
     return jsonify({'message': 'User registered successfully'}), 201
 
@@ -178,15 +202,27 @@ def login():
     email = request.json.get('email')
     password = request.json.get('password')
 
-    existing_data = read_user_data()
-    for user in existing_data:
-        if user['email'] == email and user['password'] == password:
-            role = user['role']
-            token = generate_jwt_token(role, email)
-            return jsonify({'token': token, "role":role,"email":email}), 200
+    # existing_data = read_user_data()
+    # for user in existing_data:
+    #     if user['email'] == email and user['password'] == password:
+    #         role = user['role']
+    #         token = generate_jwt_token(role, email)
+    #         return jsonify({'token': token, "role":role,"email":email}), 200
+
+    # return jsonify({'message': 'Invalid credentials'}), 401
+
+    cursor = connection.cursor()
+    query = "SELECT * FROM users WHERE email = %s"
+    cursor.execute(query, (email,))
+    user_data = cursor.fetchone()
+    cursor.close()
+
+    if user_data is not None and user_data[2] == password:
+        role = user_data[3]
+        token = generate_jwt_token(role, email)
+        return jsonify({'token': token, 'role': role, 'email': email}), 200
 
     return jsonify({'message': 'Invalid credentials'}), 401
-
 # non protected routes
 
 @app.route('/chat', methods=['POST'])
