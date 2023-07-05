@@ -192,7 +192,7 @@ def login():
 @app.route('/chat', methods=['POST'])
 def chat():
     user_message = request.json.get("user_message")  # Get the user's message from the request
-    print(user_message)
+    # print(user_message)
     openai_api_key = app.config['OPENAI_API_KEY']  # Get the OpenAI API key from the app config
 
     response = openai.ChatCompletion.create(
@@ -263,7 +263,7 @@ def place_order():
 
     # Return the response with the total price
     order = {
-        "order_id": len(orders) + 1,
+        "order_id": str(uuid.uuid4()),
         "customer": user_email,
         "total_price": total_price,
         "status": "Received"
@@ -289,7 +289,7 @@ def create_dish():
     initialize_food_items()
     data = request.get_json()
     new_dish = {
-        "id":len(food_items)+1,
+        "id":str(uuid.uuid4()),
         "name": data["name"],
         'price': data['price'],
         'availability': data['availability'],
@@ -301,7 +301,7 @@ def create_dish():
     return jsonify({"msg":"Dish Created Successfully"})
 
 # update dish
-@app.route('/dish/<int:dish_id>', methods=['PATCH'])
+@app.route('/dish/<dish_id>', methods=['PATCH'])
 @authenticate_and_authorize("Admin")
 def update_dish(dish_id):
     initialize_food_items()
@@ -329,7 +329,7 @@ def update_dish(dish_id):
     return jsonify({'message': 'Dish updated successfully'}), 200
 
 #  delete dish
-@app.route('/dish/<int:dish_id>', methods=['DELETE'])
+@app.route('/dish/<dish_id>', methods=['DELETE'])
 @authenticate_and_authorize("Admin")
 def delete_dish(dish_id):
     initialize_food_items()
@@ -353,7 +353,7 @@ def display_orders():
    load_orders()
    return jsonify(orders),200
 
-@app.route ("/orders/<int:order_id>", methods = ["PATCH"])
+@app.route ("/orders/<order_id>", methods = ["PATCH"])
 @authenticate_and_authorize("Admin")
 def update_status(order_id):
     load_orders()

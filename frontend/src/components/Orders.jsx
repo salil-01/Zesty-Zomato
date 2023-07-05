@@ -47,7 +47,6 @@ function OrdersPage() {
 
   const handleStatusChange = (orderId, status) => {
     // console.log(orderId, status);
-    orderId = +orderId;
     setLoading(true);
     fetch(`${url}/orders/${orderId}`, {
       method: "PATCH",

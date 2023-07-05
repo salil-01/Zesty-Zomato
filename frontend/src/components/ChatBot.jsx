@@ -12,11 +12,14 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { ChatIcon } from "@chakra-ui/icons";
-// import {  } from "react-icons/fa";
+const url = "http://127.0.0.1:5000";
 export const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [userInput, setUserInput] = useState("");
-  const [botResponse, setBotResponse] = useState("");
+  const [botResponse, setBotResponse] = useState(
+    "Hello, How Can I assist You?"
+  );
+  const [loading, setLoading] = useState(false);
   const [userText, setUserText] = useState("");
   const toggleModal = () => {
     setIsOpen(!isOpen);
@@ -28,9 +31,26 @@ export const Chatbot = () => {
 
   const handleSendMessage = () => {
     setUserText(userInput);
+    setLoading(true);
+    fetch(`${url}/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_message: userText }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // console.log(data);
+        setLoading(false);
+        setBotResponse(data.response);
+      })
+      .catch((error) => {
+        console.error(error);
+        setLoading(false);
+        setBotResponse("Server Connection Failed");
+      });
     setUserInput("");
-    const response = "This is a dummy response from the bot";
-    setBotResponse(response);
   };
 
   return (
@@ -38,31 +58,34 @@ export const Chatbot = () => {
       <Button
         onClick={toggleModal}
         position="fixed"
-        bottom="4"
-        right="4"
-        zIndex="999"
+        bottom="10"
+        right="10"
+        zIndex="1"
+        bg={"teal.100"}
+        padding={"15px"}
+        // border={"1px  gray"}
       >
-        <ChatIcon />
+        <ChatIcon boxSize={"25px"} />
         {/* <Icon as={<ChatIcon />} boxSize={6} /> */}
       </Button>
 
       <Modal isOpen={isOpen} onClose={toggleModal} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Chat with FoodBot</ModalHeader>
+          <ModalHeader>Chat with FoodBuddy</ModalHeader>
           <ModalCloseButton />
           <ModalBody maxHeight="400px" overflowY="auto">
             {/* Display the chat conversation */}
             {userText && (
               <div>
-                <strong>You:</strong> {userText}
+                <strong>You :</strong> {userText}
               </div>
             )}
-            {botResponse && (
-              <div>
-                <strong>FoodBot:</strong> {botResponse}
-              </div>
-            )}
+
+            <div>
+              <strong>FoodBuddy :</strong>{" "}
+              {loading ? "Loading..." : botResponse}
+            </div>
           </ModalBody>
           <ModalFooter>
             <FormControl flex="1">
