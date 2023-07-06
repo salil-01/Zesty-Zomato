@@ -77,7 +77,7 @@ const LoginForm = () => {
       maxWidth="md"
       mx="auto"
       mt={"10%"}
-      p={4}
+      p={8}
       borderWidth="1px"
       borderRadius="md"
       boxShadow="lg"
@@ -92,6 +92,7 @@ const LoginForm = () => {
             <FormLabel>Email</FormLabel>
             <Input
               type="email"
+              border={"1px solid brown"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -102,6 +103,7 @@ const LoginForm = () => {
             <Input
               type="password"
               value={password}
+              border={"1px solid brown"}
               onChange={(e) => setPassword(e.target.value)}
               required
             />

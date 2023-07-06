@@ -42,94 +42,7 @@ except mysql.connector.Error as e:
     print(f"Error Connecting to MYSQL {e}")
 
 
-# global variables to store user and food data
-existing_data = []
-food_items = []
-orders = []
-data_file_path = "./inventory.json"
-
-# ----------- data loading from local system --------------
-# reading user data
-def read_user_data():
-    try:
-        with open('users.json', 'r') as file:
-            existing_data = json.load(file)
-    except FileNotFoundError:
-        existing_data = []
-
-    return existing_data
-
-# saving user data 
-def save_user_data(user_data):
-    existing_data = read_user_data()
-    existing_data.append(user_data)
-
-    with open('users.json', 'w') as file:
-        json.dump(existing_data, file, indent=4)
-
-# checking if user already registered
-def is_user_registered(email):
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM users WHERE email = %(email)s", {'email': email})
-    count = cursor.fetchone()[0]
-
-    cursor.close()
-    connection.close()
-
-    return count > 0
-
-# load food data
-def load_data():
-    if not os.path.exists(data_file_path):
-        return []
-
-    try:
-        with open(data_file_path, 'r') as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return []
-
-# load orders
-def load_orders():
-    global orders
-    try:
-        with open("orders.json", "r") as file:
-            data = json.load(file)
-            orders = data
-    except FileNotFoundError:
-        orders = []
-
-# save food data
-def save_data(data):
-    with open(data_file_path, 'w') as file:
-        json.dump(data, file,indent=4)
-
-# save orders
-def save_orders():
-    with open("orders.json", "w") as file:
-        json.dump(orders, file,indent=4)
-
-
-# initialize data on server run
-def initialize_food_items():
-    global food_items
-    food_items = load_data()
-
-initialize_food_items()
-
-# find dish by id
-def find_dish_by_id(id):
-    for item in food_items:
-        if (item["id"]==id):
-            return item
-
-# find order by id
-def find_order_by_id(id):
-    for item in orders:
-        if (item["order_id"]==id):
-            return item
-
-
+# ------- utility functions --------- 
 # generating jwt
 def generate_jwt_token(role, email,id):
     payload = {
@@ -141,7 +54,7 @@ def generate_jwt_token(role, email,id):
     return token
 
 # checking role before accessing protected routes (auth middleware)
-def authenticate_and_authorize(role):
+def authenticate_and_authorize():
     def decorator(func):
         def wrapper(*args, **kwargs):
             # Check if Authorization header is present
@@ -156,15 +69,15 @@ def authenticate_and_authorize(role):
                 payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
 
                 # Check if the role matches the required role
-                if payload['role'] != role:
-                    return jsonify({'message': 'Unauthorized access'}), 403
-
-                # Perform the protected action
-                # using g module of flask to attach mail to request object
-                g.user_email = payload["email"]
-                g.user_id = payload["id"]
-                print(payload["id"])
-                return func(*args, **kwargs)
+                if payload['role']:
+                    # Perform the protected action
+                    # using g module of flask to attach mail to request object
+                    g.user_email = payload["email"]
+                    g.user_id = payload["id"]
+                    print(payload["id"])
+                    return func(*args, **kwargs)
+                    
+                return jsonify({'message': 'Unauthorized access'}), 403
 
             except jwt.ExpiredSignatureError:
                 return jsonify({'message': 'Token has expired'}), 401
@@ -185,10 +98,7 @@ def register():
     password = request.json.get('password')
     role = request.json.get('role')
 
-    # if is_user_registered(email):
-    #     return jsonify({'message': 'User already exists'}), 400
-
-    # connection = get_mysql_connection()
+    # connecting with mysql
     cursor = connection.cursor()
 
     query = "INSERT INTO users ( email, password, role) VALUES (%s, %s, %s)"
@@ -196,7 +106,7 @@ def register():
     cursor.execute(query, values)
     connection.commit()
     cursor.close()
-    connection.close()
+    # connection.close()
 
     return jsonify({'message': 'User registered successfully'}), 201
 
@@ -219,8 +129,9 @@ def login():
         return jsonify({'token': token, 'role': role, 'email': email}), 200
 
     return jsonify({'message': 'Invalid credentials'}), 401
-# non protected routes
 
+
+# non protected routes
 @app.route('/chat', methods=['POST'])
 def chat():
     user_message = request.json.get("user_message")  # Get the user's message from the request
@@ -241,15 +152,11 @@ def chat():
 
     # Return the bot's response to the client
     return jsonify({'response': bot_response})
-    # return jsonify({"res":"Ok"})
 
 
-# # menu route to show items avaialable to everyone
+#  menu route to show items avaialable to everyone
 @app.route('/menu', methods=['GET'])
 def get_menu():
-    # initialize_food_items()
-    # menu_items = [item for item in food_items if item['availability'] == 'Yes']
-
     # mysql
     cursor = connection.cursor()
     query = "SELECT * FROM dishes WHERE availability = 'Yes'"
@@ -265,70 +172,14 @@ def get_menu():
         }
         menu_items.append(dish)
     cursor.close()
-    return jsonify(menu_items)
+    return jsonify(menu_items), 200
 
 # multiple order taking facility
 @app.route('/place-order', methods=['POST'])
-@authenticate_and_authorize("User")
+@authenticate_and_authorize()
 def place_order():
-    # Get data from the request body
-    # user_email = g.user_email
-    # data = request.json
-    # order_items = data.get('items', {})
-    # print(order_items)
-    # load_data()
-    # load_orders()
-    
-    # # Validate the order items
-    # # if not isinstance(order_items, dict) or len(order_items) == 0:
-    # #     return jsonify({'message': 'Invalid order items'}), 400
 
-    # total_price = 0
-    # order_items_dict = {}
-
-    # # Process each order item
-    # for item_id, quantity in order_items():
-    #     # Find the selected food item
-    #     food_item = next((item for item in food_items if item['id'] == item_id), None)
-
-    #     # Check if the food item exists
-    #     if food_item is None:
-    #         return jsonify({'message': 'Invalid food item ID'}), 400
-
-    #     # Check if the food item is available
-    #     if food_item['availability'] != 'Yes':
-    #         return jsonify({'message': 'Food item is not available'}), 400
-
-    #     # Check if the quantity is greater than the available stock
-    #     if quantity > food_item['stock']:
-    #         return jsonify({'message': 'Insufficient stock'}), 400
-
-    #     # Calculate the total price for the current item
-    #     item_price = food_item['price'] * quantity
-    #     total_price += item_price
-
-    #     # Update the stock of the food item
-    #     food_item['stock'] -= quantity
-        
-    #     # Add the quantity to the order item dictionary
-    #     order_items_dict[item_id] = quantity
-
-    # # Convert the order_items_dict to a list of items
-    # order_items_list = [{'item_id': item_id, 'quantity': quantity} for item_id, quantity in order_items_dict.items()]
-    
-    # # Return the response with the total price
-    # order = {
-    #     "order_id": str(uuid.uuid4()),
-    #     "customer": user_email,
-    #     "total_price": total_price,
-    #     "status": "Received",
-    #     "items": order_items_list
-    # }
-    # orders.append(order)
-    # save_orders()
-    # save_data(food_items)
-
-    # mysql
+   # mysql
    # Get data from the request body
     user_email = g.user_email
     user_id = int(g.user_id)
@@ -382,77 +233,23 @@ def place_order():
     
     return jsonify({'message': 'Order placed successfully', 'total_price': total_price}), 200
 
-# def place_order():
-#     # Get data from the request body
-#     user_email = g.user_email
-#     data = request.json
-#     order_items = data.get('items', [])
-#     load_orders()
-#     # Validate the order items
-#     if not isinstance(order_items, list) or len(order_items) == 0:
-#         return jsonify({'message': 'Invalid order items'}), 400
-
-#     total_price = 0
-
-#     # Process each order item
-#     for item in order_items:
-#         item_id = item.get('item_id')
-#         quantity = item.get('quantity')
-
-#         # Find the selected food item
-#         food_item = next((item for item in food_items if item['id'] == item_id), None)
-
-#         # Check if the food item exists
-#         if food_item is None:
-#             return jsonify({'message': 'Invalid food item ID'}), 400
-
-#         # Check if the food item is available
-#         if food_item['availability'] != 'Yes':
-#             return jsonify({'message': 'Food item is not available'}), 400
-
-#         # Check if the quantity is greater than the available stock
-#         if quantity > food_item['stock']:
-#             return jsonify({'message': 'Insufficient stock'}), 400
-
-#         # Calculate the total price for the current item
-#         item_price = food_item['price'] * quantity
-#         total_price += item_price
-
-#         # Update the stock of the food item
-#         food_item['stock'] -= quantity
-
-#     # Return the response with the total price
-#     order = {
-#         "order_id": str(uuid.uuid4()),
-#         "customer": user_email,
-#         "total_price": total_price,
-#         "status": "Received"
-#     }
-#     orders.append(order)
-#     save_orders()
-#     save_data(food_items)
-#     return jsonify({'message': 'Order placed successfully', 'total_price': total_price}), 200
-
-
 # protected routes with admin access only 
 # list of all the items avaialable in inventory
 @app.route("/dish",methods=["GET"])
-@authenticate_and_authorize("Admin")
+@authenticate_and_authorize()
 def get_all_items():
-    # initialize_food_items()
-    # return jsonify(food_items), 200
 
     # mysql
     # Create a cursor object to execute queries
     cursor = connection.cursor()
 
-        # Execute the SELECT query to fetch all items
+     # Execute the SELECT query to fetch all items
     cursor.execute("SELECT * FROM dishes")
 
-        # Fetch all rows from the result set
+    # Fetch all rows from the result set
     items = cursor.fetchall()
 
-        # Convert the list of tuples to a list of dictionaries
+    # Convert the list of tuples to a list of dictionaries
     items_list = []
     for item in items:
         item_dict = {
@@ -464,32 +261,19 @@ def get_all_items():
             }
         items_list.append(item_dict)
 
-        # Close the cursor and database connection
+    # Close the cursor and database connection
     cursor.close()
-    # connection.close()
 
-        # Return the list of items as JSON response
+    # Return the list of items as JSON response
     return jsonify(items_list), 200
 
 
 # create a food item
 @app.route("/dish",methods=["POST"])
-@authenticate_and_authorize("Admin")
+@authenticate_and_authorize()
 def create_dish():
-    # initialize_food_items()
     data = request.get_json()
-    # new_dish = {
-    #     "id":str(uuid.uuid4()),
-    #     "name": data["name"],
-    #     'price': data['price'],
-    #     'availability': data['availability'],
-    #     'stock': data['stock']
-    # }
-    # food_items.append(new_dish)
-    # # save updated data in file
-    # save_data(food_items)
-   
-#    mysql code
+    #mysql code
     cursor = connection.cursor()
     query = "INSERT INTO dishes (name, price, availability, stock) VALUES (%s, %s, %s, %s)"
     dish_values = (data['name'], data['price'], data['availability'], data['stock'])
@@ -500,31 +284,8 @@ def create_dish():
 
 # update dish
 @app.route('/dish/<dish_id>', methods=['PATCH'])
-@authenticate_and_authorize("Admin")
+@authenticate_and_authorize()
 def update_dish(dish_id):
-    # initialize_food_items()
-    # dish = find_dish_by_id(dish_id)
-
-    # if not dish:
-    #     return jsonify({'message': 'Dish not found'}), 404
-
-    # data = request.get_json()
-    # # app.logger.debug(data)
-    # dish['name'] = data.get('name', dish['name'])
-    # dish['price'] = data.get('price', dish['price'])
-    # dish['stock'] = data.get('stock', dish['stock'])
-    # dish['availability'] = data.get('availability', dish['availability'])
-
-    # # Reset stock to zero if availability is set to "No"
-    # if dish['availability'] == 'No':
-    #     dish['stock'] = 0
-    # if dish['stock'] == 0:
-    #     dish['availability'] = 'No'
-
-    # # Save the updated data to the JSON file
-    # save_data(food_items)
-
-
     # mysql
     cursor = connection.cursor()
     query = "SELECT * FROM dishes WHERE id = %s"
@@ -557,19 +318,8 @@ def update_dish(dish_id):
 
 #  delete dish
 @app.route('/dish/<dish_id>', methods=['DELETE'])
-@authenticate_and_authorize("Admin")
+@authenticate_and_authorize()
 def delete_dish(dish_id):
-    # initialize_food_items()
-    # dish = find_dish_by_id(dish_id)
-
-    # if not dish:
-    #     return jsonify({'message': 'Dish not found'}), 404
-
-    # food_items.remove(dish)
-
-    # # Save the updated data to the JSON file
-    # save_data(food_items)
-
     # mysql
     cursor = connection.cursor()
     query = "SELECT * FROM dishes WHERE id = %s"
@@ -590,10 +340,8 @@ def delete_dish(dish_id):
     
 # all orders
 @app.route("/orders", methods=["GET"])
-@authenticate_and_authorize("Admin")
+@authenticate_and_authorize()
 def display_orders():
-#    load_orders()
-#    return jsonify(orders),200
 
 # mysql
     cursor = connection.cursor()
@@ -620,9 +368,10 @@ def display_orders():
 
 # orders of specific user
 @app.route('/orders-user', methods=['GET'])
-@authenticate_and_authorize("User")
+@authenticate_and_authorize()
 def get_user_orders():
-    user_id = g.user_id  # Assuming you have stored the user's userid in the g object
+    # taking user id from g object
+    user_id = g.user_id 
     cursor = connection.cursor()
     query = "SELECT * FROM orders WHERE user_id = %s"
     cursor.execute(query, (user_id,))
@@ -646,25 +395,9 @@ def get_user_orders():
     return jsonify({'orders':result}), 200
 
 @app.route ("/orders/<order_id>", methods = ["PATCH"])
-@authenticate_and_authorize("Admin")
+@authenticate_and_authorize()
 def update_status(order_id):
-    # load_orders()
-    # order = find_order_by_id(order_id)
-    # # app.logger.debug(order)
-    # if not order:
-    #     return jsonify({'message': 'Order not found'}), 404
-
-    # data = request.get_json()
-    # # app.logger.debug(data)
-    # order['status'] = data.get('status', order['status'])
-    
-    # # Save the updated data to the JSON file
-    # save_orders()
-
-    # return jsonify({'message': 'Order updated successfully'}), 200
-
     #mysql
-    
     data = request.get_json()
     # print(data)
     # Create a cursor object to execute queries

@@ -13,9 +13,13 @@ import {
   FormErrorMessage,
   Box,
   Spinner,
+  Flex,
+  Heading,
+  Text,
 } from "@chakra-ui/react";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 const url = "http://127.0.0.1:5000";
 export const UserOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -37,7 +41,7 @@ export const UserOrders = () => {
       .then((response) => response.json())
       .then((data) => {
         setOrders(data.orders);
-        console.log(data);
+        // console.log(data);
         setLoading(false);
       })
       .catch((error) => {
@@ -56,7 +60,7 @@ export const UserOrders = () => {
         >
           <Spinner size="xl" />
         </Box>
-      ) : (
+      ) : orders.length > 0 ? (
         <Table
           variant="striped"
           width={"80%"}
@@ -77,11 +81,11 @@ export const UserOrders = () => {
               <Tr key={order.id}>
                 <Td>{order.id}</Td>
                 <Td>{order.item_id}</Td>
-                <Td>{order.total_price}</Td>
+                <Td>$ {order.total_price}</Td>
                 <Td>{order.status}</Td>
-                <Td textAlign={"center"}>{order.rating}</Td>
+                <Td>{order.rating}</Td>
                 <Td>
-                  {order.status === "Delivered" ? (
+                  {order.status === "Delievered" ? (
                     <FormControl>
                       <Select
                         placeholder="Select Rating"
@@ -101,6 +105,30 @@ export const UserOrders = () => {
             ))}
           </Tbody>
         </Table>
+      ) : (
+        <Flex align="center" justify="center" height="90vh">
+          <Box textAlign="center">
+            <Heading fontSize="1.7rem" mb={4}>
+              Empty Order History!
+            </Heading>
+
+            <Text fontSize="md" color="gray.500">
+              Why not place some order
+              <Link to={"/"}>
+                <Text
+                  as={"span"}
+                  fontSize={"1.0rem"}
+                  fontWeight={"bold"}
+                  color={"black"}
+                  textDecoration={"underline"}
+                  marginLeft={"5px"}
+                >
+                  Menu
+                </Text>
+              </Link>
+            </Text>
+          </Box>
+        </Flex>
       )}
     </>
   );

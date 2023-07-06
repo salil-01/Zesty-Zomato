@@ -74,7 +74,7 @@ const RegisterForm = () => {
       maxWidth="md"
       mx="auto"
       mt={"10%"}
-      p={4}
+      p={8}
       borderWidth="1px"
       borderRadius="md"
       boxShadow="lg"
@@ -92,6 +92,7 @@ const RegisterForm = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              border={"1px solid brown"}
             />
           </FormControl>
           <FormControl id="password">
@@ -101,6 +102,7 @@ const RegisterForm = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              border={"1px solid brown"}
             />
           </FormControl>
           <FormControl id="role">
@@ -109,6 +111,7 @@ const RegisterForm = () => {
               value={role}
               onChange={(e) => setRole(e.target.value)}
               required
+              border={"1px solid brown"}
             >
               <option value="">Select Role</option>
               <option value="Admin">Admin</option>
