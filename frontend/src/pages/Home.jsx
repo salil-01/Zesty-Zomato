@@ -10,6 +10,7 @@ const Home = () => {
     fetch(`${url}/menu-with-reviews`)
       .then((response) => response.json())
       .then((data) => {
+        // console.log(data);
         setMenu(data);
         setLoading(false);
       })
@@ -42,7 +43,7 @@ const Home = () => {
         <Heading>Menu List</Heading>
       </Center>
       <Grid gap={4} templateColumns="repeat(auto-fit, minmax(300px, 1fr))">
-        {menu.map((dish) => (
+        {menu?.map((dish) => (
           <Dish key={dish.id} fetchData={fetchData} dish={dish} />
         ))}
       </Grid>

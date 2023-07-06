@@ -8,6 +8,9 @@ import {
   Flex,
   Center,
   HStack,
+  VStack,
+  Heading,
+  Box,
 } from "@chakra-ui/react";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
@@ -16,7 +19,7 @@ const Dish = ({ dish, fetchData }) => {
   const [quantity, setQuantity] = useState(1);
   const toast = useToast();
   const { auth, token } = useContext(AuthContext);
-
+  console.log(dish);
   const handleOrder = () => {
     // Check if the user is logged in
     if (!auth) {
@@ -76,7 +79,9 @@ const Dish = ({ dish, fetchData }) => {
       gap={"10px"}
       flexDirection={"column"}
       borderWidth="1px"
-      borderRadius="md"
+      bg={"gray.200"}
+      padding={"20px"}
+      borderRadius={"5px"}
     >
       <Center>
         <Text fontSize="lg" fontWeight="bold">
@@ -99,6 +104,30 @@ const Dish = ({ dish, fetchData }) => {
           ))}
         </Select>
       </HStack>
+      {dish?.reviews?.length > 0 ? (
+        <Box
+          margin={"20px 0px 20px 0px"}
+          border={"1px dotted green"}
+          padding={"15px"}
+        >
+          <Center mb={"10px"}>
+            <Text fontSize={"1.1rem"}>Customer Reviews</Text>
+          </Center>
+          <Flex
+            flexDirection={"column"}
+            gap={"10px"}
+            justifyItems={"flex-start"}
+          >
+            <Flex justifyContent={"left"} gap={"50px"}>
+              <Text fontWeight={"bold"}>Name : {dish.reviews[0].email}</Text>
+              <Text fontWeight={"bold"}>
+                Rating : {dish.reviews[0].rating}⭐
+              </Text>
+            </Flex>
+            <Text>Review : {dish.reviews[0].review_comment}</Text>
+          </Flex>
+        </Box>
+      ) : null}
       <Button
         colorScheme="teal"
         onClick={handleOrder}

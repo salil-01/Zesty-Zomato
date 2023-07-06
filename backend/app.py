@@ -181,7 +181,7 @@ def get_dishes_with_reviews():
         
         cursor = connection.cursor()
 
-        # Execute the query to fetch dishes with reviews
+        # Execute the query to fetch dishes with reviews = > joining tables
         query = '''
         SELECT dishes.id, dishes.name, dishes.availability,dishes.price,dishes.stock,reviews.email, reviews.rating, reviews.review_comment
         FROM dishes
@@ -189,7 +189,7 @@ def get_dishes_with_reviews():
         '''
         cursor.execute(query)
         rows = cursor.fetchall()
-        print(rows)
+        # print(rows)
         # Group the reviews by dish_id
         dishes = {}
         for row in rows:
