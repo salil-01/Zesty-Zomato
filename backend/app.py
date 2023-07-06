@@ -13,7 +13,7 @@ load_dotenv()
 port = os.getenv("port")
 secretKey = os.getenv("secretKey")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-username = os.getenv("username")
+username = os.getenv("user_name")
 password = os.getenv("password")
 databasename = os.getenv("databasename")
 
@@ -25,15 +25,15 @@ app.config['SECRET_KEY'] = secretKey
 app.config['OPENAI_API_KEY'] = OPENAI_API_KEY
 app.config['MYSQL_HOST'] = "localhost"
 app.config['MYSQL_USER'] = username
-# app.config['MYSQL_PASSWORD'] = password
+app.config['MYSQL_PASSWORD'] = password
 app.config['MYSQL_DB'] = databasename
-
+# print(username)
 # mysql connection
 try:
     connection = mysql.connector.connect(
         host=app.config['MYSQL_HOST'],
         user=app.config['MYSQL_USER'],
-        # password=app.config['MYSQL_PASSWORD'],
+        password=app.config['MYSQL_PASSWORD'],
         database=app.config['MYSQL_DB']
     )
     if connection.is_connected():
@@ -155,6 +155,7 @@ def chat():
 
 
 #  menu route to show items avaialable to everyone
+# does not contains reviews from customer
 @app.route('/menu', methods=['GET'])
 def get_menu():
     # mysql
@@ -173,6 +174,50 @@ def get_menu():
         menu_items.append(dish)
     cursor.close()
     return jsonify(menu_items), 200
+
+# contains reviews from customer
+@app.route('/menu-with-reviews', methods=['GET'])
+def get_dishes_with_reviews():
+        
+        cursor = connection.cursor()
+
+        # Execute the query to fetch dishes with reviews
+        query = '''
+        SELECT dishes.id, dishes.name, dishes.availability,dishes.price,dishes.stock,reviews.email, reviews.rating, reviews.review_comment
+        FROM dishes
+        LEFT JOIN reviews ON dishes.id = reviews.dish_id
+        '''
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        print(rows)
+        # Group the reviews by dish_id
+        dishes = {}
+        for row in rows:
+            dish_id = row[0]
+            if dish_id not in dishes:
+                dishes[dish_id] = {
+                    'id': dish_id,
+                    'name': row[1],
+                    'availability': row[2],
+                    'price': row[3],
+                    'stock': row[4],
+                    'reviews': []
+                 }
+            if row[5]:
+                dishes[dish_id]['reviews'].append({
+                    'email': row[5],
+                    'rating': row[6],
+                    'review_comment': row[7]
+                })
+
+        # Convert the dictionary of dishes to a list
+        dishes_list = list(dishes.values())
+
+        # Close the connection
+        cursor.close()
+
+        return jsonify(dishes_list),200
+
 
 # multiple order taking facility
 @app.route('/place-order', methods=['POST'])
@@ -423,6 +468,37 @@ def update_status(order_id):
 
     return jsonify({'message': 'Order updated successfully'}), 200
 
+# update the review in orders 
+@app.route ("/orders-user/<order_id>", methods = ["PATCH"])
+@authenticate_and_authorize()
+def update_rating(order_id):
+    #mysql
+    data = request.get_json()
+    # print(data)
+    # Create a cursor object to execute queries
+    cursor = connection.cursor()
+
+    query = "SELECT * FROM orders WHERE id = %s"
+    cursor.execute(query, (order_id,))
+    order = cursor.fetchone()
+
+    if not order:
+        cursor.close()
+        return jsonify({'message': 'Order not found'}), 404
+
+
+    # Update the order status in the database
+    cursor.execute("UPDATE orders SET rating = %s WHERE id = %s", (data["rating"], order_id))
+
+    # Commit the changes to the database
+    connection.commit()
+
+    # Close the cursor and database connection
+    cursor.close()
+
+    return jsonify({'message': 'Order updated successfully'}), 200
+
+
 # Endpoint to add a review and rating
 @app.route('/reviews', methods=['POST'])
 @authenticate_and_authorize()
@@ -437,7 +513,7 @@ def add_review():
     review_comment = review_data.get('review_comment')
 
     # Validate the required fields
-    if not dish_id or not customer_name or not rating or not review_comment:
+    if not dish_id or not user_email or not rating or not review_comment:
         return jsonify({'message': 'Incomplete review data'}), 400
 
     try:
@@ -457,6 +533,9 @@ def add_review():
 
     except mysql.connector.Error as error:
         return jsonify({'message': f'Error adding review: {str(error)}'}), 500
+
+
+
 
 if __name__ == '__main__':
     app.run(port=port or 3000)

@@ -7,7 +7,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState([]);
   function fetchData() {
-    fetch(`${url}/menu`)
+    fetch(`${url}/menu-with-reviews`)
       .then((response) => response.json())
       .then((data) => {
         setMenu(data);

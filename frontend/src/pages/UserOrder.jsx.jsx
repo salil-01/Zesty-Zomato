@@ -87,7 +87,11 @@ export const UserOrders = () => {
                 <Td>{order.rating}</Td>
                 <Td>
                   {order.status === "Delievered" && order.rating === 0 ? (
-                    <ReviewModal />
+                    <ReviewModal
+                      dish_id={order.item_id}
+                      order_id={order.id}
+                      fetchData={fetchData}
+                    />
                   ) : null}
                 </Td>
               </Tr>
