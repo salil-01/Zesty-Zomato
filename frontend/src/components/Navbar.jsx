@@ -48,6 +48,9 @@ const Navbar = () => {
             </MenuButton>
             <MenuList>
               <MenuItem onClick={handleClick}>Logout</MenuItem>
+              <MenuItem>
+                <Link to={"/user-orders"}>My Orders</Link>
+              </MenuItem>
             </MenuList>
           </Menu>
         )}

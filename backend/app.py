@@ -269,7 +269,7 @@ def get_menu():
 
 # multiple order taking facility
 @app.route('/place-order', methods=['POST'])
-@authenticate_and_authorize("Admin" or "User")
+@authenticate_and_authorize("User")
 def place_order():
     # Get data from the request body
     # user_email = g.user_email
@@ -345,7 +345,7 @@ def place_order():
     select_query = "SELECT * FROM dishes WHERE id = %s"
     cursor.execute(select_query, (item_id,))
     food_item = cursor.fetchone()
-    print(food_item)
+    # print(food_item)
     if food_item is None:
         cursor.close()
         return jsonify({'message': 'Invalid food item ID'}), 400
@@ -372,8 +372,10 @@ def place_order():
     connection.commit()
 
     # Insert the order into the orders table
-    insert_query = "INSERT INTO orders (email, total_price, status, user_id,item_id) VALUES (%s, %s, %s,%s,%s)"
-    insert_values = (user_email, total_price, 'Received', user_id,item_id,)
+    rating = 0
+    insert_query = "INSERT INTO orders (email, total_price, status, user_id,item_id,rating) VALUES (%s, %s, %s,%s,%s,%s)"
+    insert_values = (user_email, total_price, 'Received', user_id,item_id,rating)
+    print(insert_values)
     cursor.execute(insert_query, insert_values)
     connection.commit()
     cursor.close()
@@ -562,6 +564,33 @@ def delete_dish(dish_id):
 def display_orders():
    load_orders()
    return jsonify(orders),200
+
+# orders of specific user
+@app.route('/orders-user', methods=['GET'])
+@authenticate_and_authorize("User")
+def get_user_orders():
+    user_id = g.user_id  # Assuming you have stored the user's userid in the g object
+    cursor = connection.cursor()
+    query = "SELECT * FROM orders WHERE user_id = %s"
+    cursor.execute(query, (user_id,))
+    orders = cursor.fetchall()
+    connection.commit()
+    cursor.close()
+    # print(orders)
+    result =[]
+    for item in orders:
+        order_dict = {
+            "id": item[0],
+            "email": item[1],
+            "total_price": item[2],
+            "status": item[3],
+            "user_id": item[4],
+            "item_id": item[5],
+            "rating": item[6]
+        }
+        result.append(order_dict)
+    
+    return jsonify({'orders':result}), 200
 
 @app.route ("/orders/<order_id>", methods = ["PATCH"])
 @authenticate_and_authorize("Admin")

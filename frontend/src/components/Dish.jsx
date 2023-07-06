@@ -40,7 +40,8 @@ const Dish = ({ dish, fetchData }) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        items: [{ item_id: dish.id, quantity: quantity }],
+        id: dish.id,
+        quantity: quantity,
       }),
     })
       .then((response) => response.json())

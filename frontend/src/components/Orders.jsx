@@ -129,7 +129,7 @@ function OrdersPage() {
                         <option value="Preparing">Preparing</option>
                         <option value="Ready">Ready</option>
                         <option value="Pickup">Pickup</option>
-                        <option value="Deleivered">Deleivered</option>
+                        <option value="Delievered">Delievered</option>
                       </Select>
                     </Td>
                   </Tr>
