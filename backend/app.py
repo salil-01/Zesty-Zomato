@@ -423,5 +423,40 @@ def update_status(order_id):
 
     return jsonify({'message': 'Order updated successfully'}), 200
 
+# Endpoint to add a review and rating
+@app.route('/reviews', methods=['POST'])
+@authenticate_and_authorize()
+def add_review():
+    user_email = g.user_email
+    # Get the review data from the request
+    review_data = request.json
+
+    # Extract the relevant fields from the review data
+    dish_id = review_data.get('dish_id')
+    rating = review_data.get('rating')
+    review_comment = review_data.get('review_comment')
+
+    # Validate the required fields
+    if not dish_id or not customer_name or not rating or not review_comment:
+        return jsonify({'message': 'Incomplete review data'}), 400
+
+    try:
+        # Create a MySQL connection
+        cursor = connection.cursor()
+
+        # Insert the review into the review table
+        query = "INSERT INTO reviews (dish_id, email, rating, review_comment) VALUES (%s, %s, %s, %s)"
+        values = (dish_id, user_email, rating, review_comment)
+        cursor.execute(query, values)
+
+        # Commit the changes and close the connection
+        connection.commit()
+        cursor.close()
+
+        return jsonify({'message': 'Review added successfully'}), 201
+
+    except mysql.connector.Error as error:
+        return jsonify({'message': f'Error adding review: {str(error)}'}), 500
+
 if __name__ == '__main__':
     app.run(port=port or 3000)

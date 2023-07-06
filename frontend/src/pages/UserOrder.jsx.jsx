@@ -20,6 +20,7 @@ import {
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Link } from "react-router-dom";
+import ReviewModal from "../components/ReviewModal";
 const url = "http://127.0.0.1:5000";
 export const UserOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -85,20 +86,8 @@ export const UserOrders = () => {
                 <Td>{order.status}</Td>
                 <Td>{order.rating}</Td>
                 <Td>
-                  {order.status === "Delievered" ? (
-                    <FormControl>
-                      <Select
-                        placeholder="Select Rating"
-                        onChange={(event) =>
-                          handleRatingChange(event, order.id)
-                        }
-                      >
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                      </Select>
-                      <FormErrorMessage>Error message here</FormErrorMessage>
-                    </FormControl>
+                  {order.status === "Delievered" && order.rating === 0 ? (
+                    <ReviewModal />
                   ) : null}
                 </Td>
               </Tr>
