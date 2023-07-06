@@ -439,8 +439,38 @@ def place_order():
 @app.route("/dish",methods=["GET"])
 @authenticate_and_authorize("Admin")
 def get_all_items():
-    initialize_food_items()
-    return jsonify(food_items), 200
+    # initialize_food_items()
+    # return jsonify(food_items), 200
+
+    # mysql
+    # Create a cursor object to execute queries
+    cursor = connection.cursor()
+
+        # Execute the SELECT query to fetch all items
+    cursor.execute("SELECT * FROM dishes")
+
+        # Fetch all rows from the result set
+    items = cursor.fetchall()
+
+        # Convert the list of tuples to a list of dictionaries
+    items_list = []
+    for item in items:
+        item_dict = {
+                "id": item[0],
+                "name": item[1],
+                "price": item[2],
+                "availability": item[3],
+                "stock": item[4]
+            }
+        items_list.append(item_dict)
+
+        # Close the cursor and database connection
+    cursor.close()
+    # connection.close()
+
+        # Return the list of items as JSON response
+    return jsonify(items_list), 200
+
 
 # create a food item
 @app.route("/dish",methods=["POST"])
@@ -562,8 +592,31 @@ def delete_dish(dish_id):
 @app.route("/orders", methods=["GET"])
 @authenticate_and_authorize("Admin")
 def display_orders():
-   load_orders()
-   return jsonify(orders),200
+#    load_orders()
+#    return jsonify(orders),200
+
+# mysql
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM orders")
+
+    # Fetch all rows from the result set
+    orders = cursor.fetchall()
+    # print(orders)
+    result =[]
+    for item in orders:
+        order_dict = {
+            "id": item[0],
+            "email": item[1],
+            "total_price": item[2],
+            "status": item[3],
+            "user_id": item[4],
+            "item_id": item[5],
+            "rating": item[6]
+        }
+        result.append(order_dict)
+    # print(result)
+    cursor.close()
+    return jsonify({'orders':result}), 200
 
 # orders of specific user
 @app.route('/orders-user', methods=['GET'])
@@ -595,21 +648,47 @@ def get_user_orders():
 @app.route ("/orders/<order_id>", methods = ["PATCH"])
 @authenticate_and_authorize("Admin")
 def update_status(order_id):
-    load_orders()
-    order = find_order_by_id(order_id)
-    # app.logger.debug(order)
+    # load_orders()
+    # order = find_order_by_id(order_id)
+    # # app.logger.debug(order)
+    # if not order:
+    #     return jsonify({'message': 'Order not found'}), 404
+
+    # data = request.get_json()
+    # # app.logger.debug(data)
+    # order['status'] = data.get('status', order['status'])
+    
+    # # Save the updated data to the JSON file
+    # save_orders()
+
+    # return jsonify({'message': 'Order updated successfully'}), 200
+
+    #mysql
+    
+    data = request.get_json()
+    # print(data)
+    # Create a cursor object to execute queries
+    cursor = connection.cursor()
+
+    query = "SELECT * FROM orders WHERE id = %s"
+    cursor.execute(query, (order_id,))
+    order = cursor.fetchone()
+
     if not order:
+        cursor.close()
         return jsonify({'message': 'Order not found'}), 404
 
-    data = request.get_json()
-    # app.logger.debug(data)
-    order['status'] = data.get('status', order['status'])
-    
-    # Save the updated data to the JSON file
-    save_orders()
+
+    # Update the order status in the database
+    cursor.execute("UPDATE orders SET status = %s WHERE id = %s", (data["status"], order_id))
+
+    # Commit the changes to the database
+    connection.commit()
+
+    # Close the cursor and database connection
+    cursor.close()
 
     return jsonify({'message': 'Order updated successfully'}), 200
-
 
 if __name__ == '__main__':
     app.run(port=port or 3000)

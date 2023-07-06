@@ -32,8 +32,8 @@ function OrdersPage() {
     })
       .then((response) => response.json())
       .then((data) => {
-        setOrders(data);
-        // console.log(data);
+        setOrders(data.orders);
+        console.log(data);
         setLoading(false);
       })
       .catch((error) => {
@@ -46,7 +46,7 @@ function OrdersPage() {
   }, []);
 
   const handleStatusChange = (orderId, status) => {
-    // console.log(orderId, status);
+    console.log(orderId, status);
     setLoading(true);
     fetch(`${url}/orders/${orderId}`, {
       method: "PATCH",
@@ -105,6 +105,7 @@ function OrdersPage() {
                   <Th fontSize={"0.9rem"}>Name</Th>
                   <Th fontSize={"0.9rem"}>Price</Th>
                   <Th fontSize={"0.9rem"}>Status</Th>
+                  <Th fontSize={"0.9rem"}>Rating</Th>
                   <Th fontSize={"0.9rem"} textAlign={"center"}>
                     Action
                   </Th>
@@ -112,17 +113,18 @@ function OrdersPage() {
               </Thead>
               <Tbody>
                 {orders.map((order) => (
-                  <Tr key={order.order_id}>
-                    <Td>{order.order_id}</Td>
-                    <Td>{order.customer}</Td>
+                  <Tr key={order.id}>
+                    <Td>{order.id}</Td>
+                    <Td>{order.email}</Td>
                     <Td>$ {order.total_price}</Td>
                     <Td>{order.status}</Td>
+                    <Td>{order.rating ? order.rating : 0}</Td>
                     <Td>
                       <Select
                         // width={"50%"}
                         value={order.status}
                         onChange={(e) =>
-                          handleStatusChange(order.order_id, e.target.value)
+                          handleStatusChange(order.id, e.target.value)
                         }
                       >
                         <option value="">Update Status</option>

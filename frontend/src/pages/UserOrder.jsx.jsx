@@ -73,7 +73,7 @@ export const UserOrders = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {orders.map((order) => (
+            {orders?.map((order) => (
               <Tr key={order.id}>
                 <Td>{order.id}</Td>
                 <Td>{order.item_id}</Td>
