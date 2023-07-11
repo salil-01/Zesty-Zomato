@@ -134,12 +134,36 @@ def check_database(id):
 #     assert created_item[3] == payload['availability']
 #     assert created_item[4] == payload['stock']
 
-def test_update_dish(client):
-    payload = {
-        "price": 100,
-        "stock": 20
-    }
+# def test_update_dish(client):
+#     payload = {
+#         "price": 100,
+#         "stock": 20
+#     }
 
+#     # can be replaced with updated jwt
+#     jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQWRtaW4iLCJlbWFpbCI6Im11bm51QG1haWwiLCJpZCI6Mn0.KRCmP3B3ZrZuhE-zTMFgZ6MuKn3YErq_Bof49WbyhWo"
+
+#     # Set the JWT in the request headers
+#     headers = {
+#         'Authorization': f'Bearer {jwt}'
+#     }
+
+#     # making request
+#     response = client.patch("/dish/15", json=payload, headers=headers)
+#     data = response.get_json()
+
+#     # tests
+#     assert response.status_code == 200
+
+#     # Check the database for the created item
+#     created_item = check_database(15)
+
+#     # Perform assertions on the created item
+#     assert created_item is not None
+#     assert created_item[2] == payload['price']
+#     assert created_item[4] == payload['stock']
+
+def test_delete_dish(client):
     # can be replaced with updated jwt
     jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQWRtaW4iLCJlbWFpbCI6Im11bm51QG1haWwiLCJpZCI6Mn0.KRCmP3B3ZrZuhE-zTMFgZ6MuKn3YErq_Bof49WbyhWo"
 
@@ -149,7 +173,7 @@ def test_update_dish(client):
     }
 
     # making request
-    response = client.patch("/dish/15", json=payload, headers=headers)
+    response = client.delete("/dish/15", headers=headers)
     data = response.get_json()
 
     # tests
@@ -159,6 +183,4 @@ def test_update_dish(client):
     created_item = check_database(15)
 
     # Perform assertions on the created item
-    assert created_item is not None
-    assert created_item[2] == payload['price']
-    assert created_item[4] == payload['stock']
+    assert created_item is None
