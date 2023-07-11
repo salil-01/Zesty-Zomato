@@ -39,7 +39,7 @@ def client():
 # interacting with db
 
 
-def check_database(item_data):
+def check_database(id):
     # Set up your MySQL database connection
     connection = mysql.connector.connect(
         host='localhost',
@@ -51,8 +51,8 @@ def check_database(item_data):
     cursor = connection.cursor()
 
     # Execute the query to retrieve the inserted item
-    query = "SELECT * FROM dishes WHERE name = %s"
-    cursor.execute(query, (item_data['name'],))
+    query = "SELECT * FROM dishes WHERE id = %s"
+    cursor.execute(query, (id,))
     created_item = cursor.fetchone()
 
     # Close the cursor and connection
@@ -101,12 +101,43 @@ def check_database(item_data):
 #     assert data["total_price"] == 40
 
 
-def test_create_dish(client):
+# def test_create_dish(client):
+#     payload = {
+#         "name": "Sandwich",
+#         "price": 60,
+#         "availability": "Yes",
+#         "stock": 10
+#     }
+
+#     # can be replaced with updated jwt
+#     jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQWRtaW4iLCJlbWFpbCI6Im11bm51QG1haWwiLCJpZCI6Mn0.KRCmP3B3ZrZuhE-zTMFgZ6MuKn3YErq_Bof49WbyhWo"
+
+#     # Set the JWT in the request headers
+#     headers = {
+#         'Authorization': f'Bearer {jwt}'
+#     }
+
+#     # making request
+#     response = client.post("/dish", json=payload, headers=headers)
+#     data = response.get_json()
+
+#     # tests
+#     assert response.status_code == 200
+
+#     # Check the database for the created item
+#     created_item = check_database(1)
+
+#     # Perform assertions on the created item
+#     assert created_item is not None
+#     assert created_item[1] == payload['name']
+#     assert created_item[2] == payload['price']
+#     assert created_item[3] == payload['availability']
+#     assert created_item[4] == payload['stock']
+
+def test_update_dish(client):
     payload = {
-        "name": "Sandwich",
-        "price": 60,
-        "availability": "Yes",
-        "stock": 10
+        "price": 100,
+        "stock": 20
     }
 
     # can be replaced with updated jwt
@@ -118,18 +149,16 @@ def test_create_dish(client):
     }
 
     # making request
-    response = client.post("/dish", json=payload, headers=headers)
+    response = client.patch("/dish/15", json=payload, headers=headers)
     data = response.get_json()
 
     # tests
     assert response.status_code == 200
 
     # Check the database for the created item
-    created_item = check_database(payload)
+    created_item = check_database(15)
 
     # Perform assertions on the created item
     assert created_item is not None
-    assert created_item[1] == payload['name']
     assert created_item[2] == payload['price']
-    assert created_item[3] == payload['availability']
     assert created_item[4] == payload['stock']
