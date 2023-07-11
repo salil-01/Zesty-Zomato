@@ -3,7 +3,7 @@ import os
 import uuid
 import jwt
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify,g
+from flask import Flask, request, jsonify, g
 from flask_cors import CORS
 import openai
 import mysql.connector
@@ -42,18 +42,20 @@ except mysql.connector.Error as e:
     print(f"Error Connecting to MYSQL {e}")
 
 
-# ------- utility functions --------- 
+# ------- utility functions ---------
 # generating jwt
-def generate_jwt_token(role, email,id):
+def generate_jwt_token(role, email, id):
     payload = {
         'role': role,
         'email': email,
-        "id":id
+        "id": id
     }
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return token
 
 # checking role before accessing protected routes (auth middleware)
+
+
 def authenticate_and_authorize():
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -66,7 +68,8 @@ def authenticate_and_authorize():
 
             try:
                 # Verify and decode the token
-                payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+                payload = jwt.decode(
+                    token, app.config['SECRET_KEY'], algorithms=['HS256'])
 
                 # Check if the role matches the required role
                 if payload['role']:
@@ -76,7 +79,7 @@ def authenticate_and_authorize():
                     g.user_id = payload["id"]
                     print(payload["id"])
                     return func(*args, **kwargs)
-                    
+
                 return jsonify({'message': 'Unauthorized access'}), 403
 
             except jwt.ExpiredSignatureError:
@@ -102,13 +105,14 @@ def register():
     cursor = connection.cursor()
 
     query = "INSERT INTO users ( email, password, role) VALUES (%s, %s, %s)"
-    values = ( email, password, role)
+    values = (email, password, role)
     cursor.execute(query, values)
     connection.commit()
     cursor.close()
     # connection.close()
 
     return jsonify({'message': 'User registered successfully'}), 201
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -125,7 +129,7 @@ def login():
     if user_data is not None and user_data[2] == password:
         role = user_data[3]
         id = user_data[0]
-        token = generate_jwt_token(role, email,id)
+        token = generate_jwt_token(role, email, id)
         return jsonify({'token': token, 'role': role, 'email': email}), 200
 
     return jsonify({'message': 'Invalid credentials'}), 401
@@ -134,9 +138,11 @@ def login():
 # non protected routes
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.json.get("user_message")  # Get the user's message from the request
+    # Get the user's message from the request
+    user_message = request.json.get("user_message")
     # print(user_message)
-    openai_api_key = app.config['OPENAI_API_KEY']  # Get the OpenAI API key from the app config
+    # Get the OpenAI API key from the app config
+    openai_api_key = app.config['OPENAI_API_KEY']
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -176,47 +182,49 @@ def get_menu():
     return jsonify(menu_items), 200
 
 # contains reviews from customer
+
+
 @app.route('/menu-with-reviews', methods=['GET'])
 def get_dishes_with_reviews():
-        
-        cursor = connection.cursor()
 
-        # Execute the query to fetch dishes with reviews = > joining tables
-        query = '''
+    cursor = connection.cursor()
+
+    # Execute the query to fetch dishes with reviews = > joining tables
+    query = '''
         SELECT dishes.id, dishes.name, dishes.availability,dishes.price,dishes.stock,reviews.email, reviews.rating, reviews.review_comment
         FROM dishes
         LEFT JOIN reviews ON dishes.id = reviews.dish_id
         '''
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        # print(rows)
-        # Group the reviews by dish_id
-        dishes = {}
-        for row in rows:
-            dish_id = row[0]
-            if dish_id not in dishes:
-                dishes[dish_id] = {
-                    'id': dish_id,
-                    'name': row[1],
-                    'availability': row[2],
-                    'price': row[3],
-                    'stock': row[4],
-                    'reviews': []
-                 }
-            if row[5]:
-                dishes[dish_id]['reviews'].append({
-                    'email': row[5],
-                    'rating': row[6],
-                    'review_comment': row[7]
-                })
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    # print(rows)
+    # Group the reviews by dish_id
+    dishes = {}
+    for row in rows:
+        dish_id = row[0]
+        if dish_id not in dishes:
+            dishes[dish_id] = {
+                'id': dish_id,
+                'name': row[1],
+                'availability': row[2],
+                'price': row[3],
+                'stock': row[4],
+                'reviews': []
+            }
+        if row[5]:
+            dishes[dish_id]['reviews'].append({
+                'email': row[5],
+                'rating': row[6],
+                'review_comment': row[7]
+            })
 
-        # Convert the dictionary of dishes to a list
-        dishes_list = list(dishes.values())
+    # Convert the dictionary of dishes to a list
+    dishes_list = list(dishes.values())
 
-        # Close the connection
-        cursor.close()
+    # Close the connection
+    cursor.close()
 
-        return jsonify(dishes_list),200
+    return jsonify(dishes_list), 200
 
 
 # multiple order taking facility
@@ -231,11 +239,11 @@ def place_order():
     data = request.json
     item_id = int(data.get('id'))
     quantity = int(data.get('quantity'))
-    
+
     # Validate the order data
     if not item_id or not quantity:
         return jsonify({'message': 'Invalid order data'}), 400
-    
+
      # Find the selected food item
     cursor = connection.cursor()
     select_query = "SELECT * FROM dishes WHERE id = %s"
@@ -245,14 +253,14 @@ def place_order():
     if food_item is None:
         cursor.close()
         return jsonify({'message': 'Invalid food item ID'}), 400
-    
+
     # Check if the food item is available
     if food_item[3] != 'Yes':
         cursor.close()
         return jsonify({'message': 'Food item is not available'}), 400
 
     # Check if the quantity is greater than the available stock
-    
+
     if quantity > food_item[4]:
         cursor.close()
         return jsonify({'message': 'Insufficient stock'}), 400
@@ -270,17 +278,20 @@ def place_order():
     # Insert the order into the orders table
     rating = 0
     insert_query = "INSERT INTO orders (email, total_price, status, user_id,item_id,rating) VALUES (%s, %s, %s,%s,%s,%s)"
-    insert_values = (user_email, total_price, 'Received', user_id,item_id,rating)
+    insert_values = (user_email, total_price, 'Received',
+                     user_id, item_id, rating)
     print(insert_values)
     cursor.execute(insert_query, insert_values)
     connection.commit()
     cursor.close()
-    
+
     return jsonify({'message': 'Order placed successfully', 'total_price': total_price}), 200
 
-# protected routes with admin access only 
+# protected routes with admin access only
 # list of all the items avaialable in inventory
-@app.route("/dish",methods=["GET"])
+
+
+@app.route("/dish", methods=["GET"])
 @authenticate_and_authorize()
 def get_all_items():
 
@@ -288,7 +299,7 @@ def get_all_items():
     # Create a cursor object to execute queries
     cursor = connection.cursor()
 
-     # Execute the SELECT query to fetch all items
+    # Execute the SELECT query to fetch all items
     cursor.execute("SELECT * FROM dishes")
 
     # Fetch all rows from the result set
@@ -298,12 +309,12 @@ def get_all_items():
     items_list = []
     for item in items:
         item_dict = {
-                "id": item[0],
-                "name": item[1],
-                "price": item[2],
-                "availability": item[3],
-                "stock": item[4]
-            }
+            "id": item[0],
+            "name": item[1],
+            "price": item[2],
+            "availability": item[3],
+            "stock": item[4]
+        }
         items_list.append(item_dict)
 
     # Close the cursor and database connection
@@ -314,20 +325,23 @@ def get_all_items():
 
 
 # create a food item
-@app.route("/dish",methods=["POST"])
+@app.route("/dish", methods=["POST"])
 @authenticate_and_authorize()
 def create_dish():
     data = request.get_json()
-    #mysql code
+    # mysql code
     cursor = connection.cursor()
     query = "INSERT INTO dishes (name, price, availability, stock) VALUES (%s, %s, %s, %s)"
-    dish_values = (data['name'], data['price'], data['availability'], data['stock'])
+    dish_values = (data['name'], data['price'],
+                   data['availability'], data['stock'])
     cursor.execute(query, dish_values)
     connection.commit()
     cursor.close()
-    return jsonify({"msg":"Dish Created Successfully"})
+    return jsonify({"msg": "Dish Created Successfully"})
 
 # update dish
+
+
 @app.route('/dish/<dish_id>', methods=['PATCH'])
 @authenticate_and_authorize()
 def update_dish(dish_id):
@@ -362,6 +376,8 @@ def update_dish(dish_id):
     return jsonify({'message': 'Dish updated successfully'}), 200
 
 #  delete dish
+
+
 @app.route('/dish/<dish_id>', methods=['DELETE'])
 @authenticate_and_authorize()
 def delete_dish(dish_id):
@@ -375,6 +391,9 @@ def delete_dish(dish_id):
         cursor.close()
         return jsonify({'message': 'Dish not found'}), 404
 
+    delete_review = "DELETE FROM reviews WHERE dish_id = %s"
+    cursor.execute(delete_review, (dish_id,))
+    connection.commit()
     delete_query = "DELETE FROM dishes WHERE id = %s"
     cursor.execute(delete_query, (dish_id,))
     connection.commit()
@@ -382,20 +401,20 @@ def delete_dish(dish_id):
 
     return jsonify({'message': 'Dish deleted successfully'})
 
-    
+
 # all orders
 @app.route("/orders", methods=["GET"])
 @authenticate_and_authorize()
 def display_orders():
 
-# mysql
+    # mysql
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM orders")
 
     # Fetch all rows from the result set
     orders = cursor.fetchall()
     # print(orders)
-    result =[]
+    result = []
     for item in orders:
         order_dict = {
             "id": item[0],
@@ -409,14 +428,16 @@ def display_orders():
         result.append(order_dict)
     # print(result)
     cursor.close()
-    return jsonify({'orders':result}), 200
+    return jsonify({'orders': result}), 200
 
 # orders of specific user
+
+
 @app.route('/orders-user', methods=['GET'])
 @authenticate_and_authorize()
 def get_user_orders():
     # taking user id from g object
-    user_id = g.user_id 
+    user_id = g.user_id
     cursor = connection.cursor()
     query = "SELECT * FROM orders WHERE user_id = %s"
     cursor.execute(query, (user_id,))
@@ -424,7 +445,7 @@ def get_user_orders():
     connection.commit()
     cursor.close()
     # print(orders)
-    result =[]
+    result = []
     for item in orders:
         order_dict = {
             "id": item[0],
@@ -436,13 +457,14 @@ def get_user_orders():
             "rating": item[6]
         }
         result.append(order_dict)
-    
-    return jsonify({'orders':result}), 200
 
-@app.route ("/orders/<order_id>", methods = ["PATCH"])
+    return jsonify({'orders': result}), 200
+
+
+@app.route("/orders/<order_id>", methods=["PATCH"])
 @authenticate_and_authorize()
 def update_status(order_id):
-    #mysql
+    # mysql
     data = request.get_json()
     # print(data)
     # Create a cursor object to execute queries
@@ -456,9 +478,9 @@ def update_status(order_id):
         cursor.close()
         return jsonify({'message': 'Order not found'}), 404
 
-
     # Update the order status in the database
-    cursor.execute("UPDATE orders SET status = %s WHERE id = %s", (data["status"], order_id))
+    cursor.execute("UPDATE orders SET status = %s WHERE id = %s",
+                   (data["status"], order_id))
 
     # Commit the changes to the database
     connection.commit()
@@ -468,11 +490,13 @@ def update_status(order_id):
 
     return jsonify({'message': 'Order updated successfully'}), 200
 
-# update the review in orders 
-@app.route ("/orders-user/<order_id>", methods = ["PATCH"])
+# update the review in orders
+
+
+@app.route("/orders-user/<order_id>", methods=["PATCH"])
 @authenticate_and_authorize()
 def update_rating(order_id):
-    #mysql
+    # mysql
     data = request.get_json()
     # print(data)
     # Create a cursor object to execute queries
@@ -486,9 +510,9 @@ def update_rating(order_id):
         cursor.close()
         return jsonify({'message': 'Order not found'}), 404
 
-
     # Update the order status in the database
-    cursor.execute("UPDATE orders SET rating = %s WHERE id = %s", (data["rating"], order_id))
+    cursor.execute("UPDATE orders SET rating = %s WHERE id = %s",
+                   (data["rating"], order_id))
 
     # Commit the changes to the database
     connection.commit()
@@ -533,8 +557,6 @@ def add_review():
 
     except mysql.connector.Error as error:
         return jsonify({'message': f'Error adding review: {str(error)}'}), 500
-
-
 
 
 if __name__ == '__main__':
